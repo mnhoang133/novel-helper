@@ -53,7 +53,8 @@ DEFAULT_CONFIG = {
     "bottom_margin_cm": 1.2,
     "footer_distance_cm": 0.7,
     "header_distance_cm": 0.7,
-    "mirror_margins": True        # Lề đối xứng trang chẵn / lẻ
+    "mirror_margins": True,       # Lề đối xứng trang chẵn / lẻ
+    "theme_mode": "Dark"          # Giao diện Dark / Light theo sở thích người dùng
 }
 
 

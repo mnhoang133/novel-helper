@@ -70,26 +70,29 @@ def export_single_document(
     if total == 0:
         raise ValueError("No chapters to export!")
 
-    # Bounds validation
-    inside_margin_cm = max(0.5, min(5.0, float(inside_margin_cm)))
-    outside_margin_cm = max(0.5, min(4.0, float(outside_margin_cm)))
-    top_margin_cm = max(0.5, min(3.5, float(top_margin_cm)))
-    bottom_margin_cm = max(0.5, min(3.5, float(bottom_margin_cm)))
-    footer_distance_cm = max(0.3, min(2.5, float(footer_distance_cm)))
-    header_distance_cm = max(0.3, min(2.5, float(header_distance_cm)))
+    # Bounds validation (allows down to 0.2cm for narrow custom margins)
+    inside_margin_cm = max(0.2, min(5.0, float(inside_margin_cm)))
+    outside_margin_cm = max(0.2, min(4.0, float(outside_margin_cm)))
+    top_margin_cm = max(0.2, min(3.5, float(top_margin_cm)))
+    bottom_margin_cm = max(0.2, min(3.5, float(bottom_margin_cm)))
+    footer_distance_cm = max(0.2, min(2.5, float(footer_distance_cm)))
+    header_distance_cm = max(0.2, min(2.5, float(header_distance_cm)))
 
-    # Smart Mirror Margins Protection:
-    # For physical book printing, the binding gutter (inside margin) MUST be wider
-    # than the outer margin so text isn't swallowed by the spine during binding.
-    # If inside <= outside (e.g. user set all margins to 0.6cm),
-    # auto-elevate inside margin to safe binding width: max(1.2, round(outside * 2.0, 1))
+    # Mirror Margins & Binding Geometry:
+    # When mirror_margins is active:
+    # Odd pages: Left (Spine/Gáy) = 1.2cm, Right (Outer/Mép) = outside_margin_cm
+    # Even pages: Left (Outer/Mép) = inside_margin_cm (or outside_margin_cm), Right (Spine/Gáy) = 1.2cm
+    # In Word OpenXML with <w:mirrorMargins/>, left_margin is the Inside/Spine margin, right_margin is Outside.
     if mirror_margins:
-        if inside_margin_cm <= outside_margin_cm:
-            inside_margin_cm = max(1.2, round(outside_margin_cm * 2.0, 1))
+        effective_inside_cm = max(1.2, inside_margin_cm)
+        effective_outside_cm = outside_margin_cm
+    else:
+        effective_inside_cm = inside_margin_cm
+        effective_outside_cm = outside_margin_cm
 
     # Dynamic line and character capacity based on actual margins & font size
     printable_height_cm = max(15.0, 29.7 - (top_margin_cm + bottom_margin_cm))
-    printable_width_cm = max(10.0, 21.0 - (inside_margin_cm + outside_margin_cm))
+    printable_width_cm = max(10.0, 21.0 - (effective_inside_cm + effective_outside_cm))
     lines_per_page = calculate_lines_per_page(printable_height_cm, body_font_size)
     chars_per_line = calculate_chars_per_line(printable_width_cm, body_font_size)
 
@@ -103,8 +106,8 @@ def export_single_document(
 
     # ----------------- SECTION MARGINS & MIRROR MARGINS -----------------
     sec = doc.sections[0]
-    sec.left_margin = Cm(inside_margin_cm)     # Inside margin (Gáy sách)
-    sec.right_margin = Cm(outside_margin_cm)   # Outside margin (Mép ngoài)
+    sec.left_margin = Cm(effective_inside_cm)     # Inside margin (Gáy sách)
+    sec.right_margin = Cm(effective_outside_cm)   # Outside margin (Mép ngoài)
     sec.top_margin = Cm(top_margin_cm)
     sec.bottom_margin = Cm(bottom_margin_cm)
     sec.footer_distance = Cm(footer_distance_cm)

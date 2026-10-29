@@ -83,9 +83,6 @@ class ModernNovelApp(ctk.CTk):
         self._build_ui()
         self._load_startup_config()
 
-        # Apply initial theme styling to custom components
-        self._apply_theme("Light")
-
         # Save session when window is closed
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -195,12 +192,13 @@ class ModernNovelApp(ctk.CTk):
     # THEME TOGGLING & BUTTON STYLES
     # =========================================================================
     def _toggle_theme(self):
-        if self.switch_theme.get() == 1:
-            self._apply_theme("Dark")
-        else:
-            self._apply_theme("Light")
+        new_mode = "Dark" if self.switch_theme.get() == 1 else "Light"
+        self._apply_theme(new_mode)
+        self.theme_mode = new_mode
+        self._save_current_session()
 
     def _apply_theme(self, mode: str):
+        self.theme_mode = mode
         ctk.set_appearance_mode(mode)
 
         if hasattr(self, 'switch_theme'):
@@ -390,6 +388,9 @@ class ModernNovelApp(ctk.CTk):
         self.saved_novel_configs = saved_configs
         self._refresh_detected_novels()
 
+        saved_theme = current_cfg.get("theme_mode", "Dark") if current_cfg else "Dark"
+        self._apply_theme(saved_theme)
+
         if current_cfg:
             self._apply_dict_to_ui(current_cfg)
             if last_novel:
@@ -405,6 +406,7 @@ class ModernNovelApp(ctk.CTk):
             return
 
         self._load_default_config()
+        self._apply_theme("Dark")
         self._scan_chapters_for_pub()
 
     def _on_close(self):
@@ -622,7 +624,7 @@ class ModernNovelApp(ctk.CTk):
             self.log_message(f"Reset publish range to all available chapters: Ch {info['min_chapter']} to Ch {info['max_chapter']}", "info")
 
     def _on_margin_changed(self):
-        """Updates dynamic live preview of odd/even margin placement and enforces safe inside binding."""
+        """Updates dynamic live preview of odd/even margin placement without overwriting user input."""
         if not hasattr(self, 'lbl_margin_preview') or not hasattr(self, 'entry_margin_inside'):
             return
         try:
@@ -639,13 +641,8 @@ class ModernNovelApp(ctk.CTk):
 
         is_mirror = self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True
         if is_mirror:
-            # If inside is smaller than or equal to outside, auto-elevate inside to safe binding width
-            if inside <= outside:
-                inside = max(1.2, round(outside * 2.0, 1))
-                self.entry_margin_inside.delete(0, "end")
-                self.entry_margin_inside.insert(0, str(inside))
             self.lbl_margin_preview.configure(
-                text=f"[Lề đối xứng in 2 mặt] Trang lẻ: Trái (Gáy) {inside}cm, Phải (Mép) {outside}cm  |  Trang chẵn: Trái (Mép) {outside}cm, Phải (Gáy) {inside}cm",
+                text=f"[Lề đối xứng in 2 mặt] Trang lẻ: Trái (Gáy) 1.2cm, Phải (Mép) {outside}cm  |  Trang chẵn: Trái (Mép) {inside}cm, Phải (Gáy) 1.2cm",
                 text_color=("#0284c7", "#38bdf8")
             )
         else:
@@ -1038,7 +1035,8 @@ class ModernNovelApp(ctk.CTk):
             "top_margin_cm": float(self.entry_margin_top.get() or 1.2) if hasattr(self, 'entry_margin_top') else 1.2,
             "bottom_margin_cm": float(self.entry_margin_bottom.get() or 1.2) if hasattr(self, 'entry_margin_bottom') else 1.2,
             "footer_distance_cm": float(self.entry_footer_dist.get() or 0.7) if hasattr(self, 'entry_footer_dist') else 0.7,
-            "mirror_margins": self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True
+            "mirror_margins": self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True,
+            "theme_mode": getattr(self, "theme_mode", "Dark")
         }
 
     def _apply_dict_to_ui(self, cfg: dict):
@@ -1140,6 +1138,8 @@ class ModernNovelApp(ctk.CTk):
             self.entry_footer_dist.insert(0, str(cfg["footer_distance_cm"]))
         if hasattr(self, 'var_mirror_margins') and "mirror_margins" in cfg:
             self.var_mirror_margins.set(cfg["mirror_margins"])
+        if "theme_mode" in cfg:
+            self._apply_theme(cfg["theme_mode"])
         self._on_margin_changed()
 
     def _save_profile_file(self):
