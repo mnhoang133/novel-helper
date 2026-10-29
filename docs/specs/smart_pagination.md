@@ -1,4 +1,4 @@
-# 📄 SPEC: Smart Pagination & Orphan Header Prevention
+# SPEC: Smart Pagination & Orphan Header Prevention
 
 ## 1. Problem Statement
 In traditional document exporting, either:
@@ -10,7 +10,7 @@ In traditional document exporting, either:
 ## 2. The Rule of 8.0 Lines (`core/docx_builder.py`)
 A physical page contains $N$ lines (e.g. 33.4 lines).
 Starting a new chapter requires:
-- Chapter Heading (`CHAPTER X`) + Ornament divider (`~ ✦ ~`) + spacing: $\approx 5.0\text{ lines}$
+- Chapter Heading (`CHAPTER X`) + Ornament divider (`~ * ~`) + spacing: $\approx 5.0\text{ lines}$
 - Minimum body text to establish readable context: $\mathbf{3.0\text{ lines}}$
 - **Minimum Required Space**: $\mathbf{8.0\text{ lines}}$
 

@@ -1,4 +1,4 @@
-# 🗺️ ARCHITECTURE MASTER INDEX
+# ARCHITECTURE MASTER INDEX
 
 > **Quick Routing Guide for Developers & AI Agents**  
 > Use this index to jump straight to the exact documentation file and code module for your task. Never spend time scanning unrelated files.

@@ -1,4 +1,4 @@
-# 📐 ARCHITECTURE MAP & MASTER DEVELOPER GUIDE
+# ARCHITECTURE MAP & MASTER DEVELOPER GUIDE
 > **Project**: Modern Novel Scraper & Print-Ready Book Publisher  
 > **Target Audience**: Future AI Agents & Developers maintaining this codebase.  
 > **Key Goal**: Fast, zero-overhead navigation and modification without having to read through 2000+ lines of monolithic code.
@@ -202,7 +202,7 @@ User interface builders.
     - "Khôi phục mặc định" (Reset Margins) button.
   - Card 4: Volume Splitting & Optimization:
     - Target Pages entry & Smart Pagination checkbox.
-    - **"⚡ Phân tích & Tối ưu số trang (Smart Volume Analyzer)"** button.
+    - **"[Analyze] Phân tích & Tối ưu số trang (Smart Volume Analyzer)"** button.
     - Format dropdown (DOCX, PDF, Cả hai).
   - Action buttons: "GENERATE PRINT-READY BOOK", "Sửa lỗi ký tự XML file TXT", "OPEN FOLDER".
 
@@ -215,7 +215,7 @@ Modal dialog for volume balancing and TOC fit analysis.
   - Displays:
     - Total detected chapters and estimated total book pages.
     - 3 Interactive Tier Cards (Mỏng 50-100 trang, Chuẩn 100-200 trang, Dày 300-400 trang).
-    - For each tier: Volume count, Average pages per volume, Average chapters per volume, and **TOC Fit Rating** (e.g. `🌟 Rất khít (1 trang mục lục, lấp đầy 91%)`).
+    - For each tier: Volume count, Average pages per volume, Average chapters per volume, and **TOC Fit Rating** (e.g. `[TOC Fit] Rất khít (1 trang mục lục, lấp đầy 91%)`).
     - Detailed chapter breakdown per volume (e.g. `Tập 1: Chap 1 -> 26 (~308 trang)`).
   - "Áp dụng cấu hình này" button: Immediately sets target pages in Tab 2 and closes the dialog.
 

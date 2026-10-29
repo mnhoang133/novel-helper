@@ -111,11 +111,11 @@ def save_batch_to_file(batch_records: List[Tuple[int, str, bool, Optional[str]]]
 
 def run_scraper():
     print("=" * 75)
-    print("🚀 BẮT ĐẦU CÀO TRUYỆN: INVINCIBLE MUMU")
-    print(f"Khoảng Chapter : {START_CHAPTER} đến {END_CHAPTER} (Tổng: {END_CHAPTER - START_CHAPTER + 1})")
-    print(f"Thư mục lưu    : {os.path.abspath(OUTPUT_DIR)}")
-    print(f"Đóng gói batch : {BATCH_SIZE} chapters -> 1 file .txt")
-    print(f"Chế độ thử lại : {'BẬT (Thử lại đến khi thành công)' if RETRY_UNTIL_SUCCESS else f'Tối đa {MAX_RETRIES} lần'}")
+    print("[START] BAT DAU CAO TRUYEN: INVINCIBLE MUMU")
+    print(f"Khoang Chapter : {START_CHAPTER} den {END_CHAPTER} (Tong: {END_CHAPTER - START_CHAPTER + 1})")
+    print(f"Thu muc luu    : {os.path.abspath(OUTPUT_DIR)}")
+    print(f"Dong goi batch : {BATCH_SIZE} chapters -> 1 file .txt")
+    print(f"Che do thu lai : {'BAT (Thu lai den khi thanh cong)' if RETRY_UNTIL_SUCCESS else f'Toi da {MAX_RETRIES} lan'}")
     print("=" * 75)
 
     session = init_session()
@@ -129,7 +129,7 @@ def run_scraper():
     for ch_num in range(START_CHAPTER, END_CHAPTER + 1):
         idx = ch_num - START_CHAPTER + 1
 
-        # Vòng lặp thử lại cho chapter
+        # Vong lap thu lai cho chapter
         attempt = 0
         success = False
         content = ""
@@ -138,23 +138,23 @@ def run_scraper():
         while not success:
             attempt += 1
             if attempt == 1:
-                print(f"[{idx}/{total_chapters}] Đang tải Chapter {ch_num}...", end=" ", flush=True)
+                print(f"[{idx}/{total_chapters}] Dang tai Chapter {ch_num}...", end=" ", flush=True)
             else:
-                print(f"   🔄 [Thử lại lần {attempt}] Đang cào lại Chapter {ch_num}...", end=" ", flush=True)
+                print(f"   [RETRY {attempt}] Dang cao lai Chapter {ch_num}...", end=" ", flush=True)
 
             success, content, error_msg = fetch_and_parse_chapter(session, ch_num)
 
             if success:
                 successful_downloads += 1
-                retry_str = f" (sau {attempt} lần)" if attempt > 1 else ""
-                print(f"✅ OK ({len(content)} ký tự){retry_str}")
+                retry_str = f" (sau {attempt} lan)" if attempt > 1 else ""
+                print(f"[OK] ({len(content)} ky tu){retry_str}")
                 current_batch.append((ch_num, content, True, None))
                 break
             else:
-                print(f"❌ THẤT BẠI - {error_msg}")
+                print(f"[FAIL] - {error_msg}")
 
-                # Làm mới session nếu đứt mạng / timeout
-                if "Timeout" in error_msg or "kết nối" in error_msg or "Connection" in error_msg:
+                # Lam moi session neu dut mang / timeout
+                if "Timeout" in error_msg or "ket noi" in error_msg or "Connection" in error_msg:
                     try:
                         session.close()
                         session = init_session()
@@ -167,27 +167,27 @@ def run_scraper():
                     break
 
                 retry_sleep = round(random.uniform(MIN_DELAY, MAX_DELAY), 2)
-                print(f"   ⏳ Chờ {retry_sleep}s trước khi cào lại Chapter {ch_num}...")
+                print(f"   [WAIT] Cho {retry_sleep}s truoc khi cao lai Chapter {ch_num}...")
                 time.sleep(retry_sleep)
 
-        # Lưu batch
+        # Luu batch
         is_last_chapter = (ch_num == END_CHAPTER)
         if len(current_batch) >= BATCH_SIZE or is_last_chapter:
             batch_end = ch_num
             saved_file = save_batch_to_file(current_batch, batch_start, batch_end)
-            print(f"   💾 Đã lưu batch: {os.path.basename(saved_file)} ({len(current_batch)} chapters)")
+            print(f"   [SAVED] Da luu batch: {os.path.basename(saved_file)} ({len(current_batch)} chapters)")
 
             current_batch = []
             batch_start = ch_num + 1
 
-        # Nghỉ ngơi giữa các chapter
+        # Nghi ngoi giua cac chapter
         if not is_last_chapter and success:
             sleep_duration = round(random.uniform(MIN_DELAY, MAX_DELAY), 2)
-            print(f"   ⏳ Nghỉ {sleep_duration}s để mô phỏng người đọc...")
+            print(f"   [WAIT] Nghi {sleep_duration}s de mo phong nguoi doc...")
             time.sleep(sleep_duration)
 
     print("\n" + "=" * 75)
-    print("🎉 HOÀN TẤT!")
+    print("[COMPLETE] HOAN TAT!")
     print(f"Tổng chapters : {total_chapters}")
     print(f"Thành công    : {successful_downloads}")
     print(f"Lỗi / Bỏ qua  : {failed_downloads}")

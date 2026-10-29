@@ -1,10 +1,10 @@
-# 📖 Universal Novel Scraper & Print-Ready Book Publisher (DOCX / PDF)
+# Universal Novel Scraper & Print-Ready Book Publisher (DOCX / PDF)
 
 A production-grade Python desktop application and headless CLI suite designed to scrape web novels, bypass Cloudflare bot protections, and compile chapters into physical print-ready **Word (.docx)** and **PDF** book volumes with automatic Tables of Contents, balanced volume partitioning, and true two-sided book binding margins.
 
 ---
 
-## 📁 Project Architecture
+## Project Architecture
 
 ```
 novel_scraper/
@@ -44,7 +44,7 @@ novel_scraper/
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 ### 1. Two-Sided Book Printing & Mirror Margins (`<w:mirrorMargins/>`)
 - Native OpenXML `<w:mirrorMargins/>` and `<w:evenAndOddHeaders/>` support.
@@ -73,7 +73,7 @@ novel_scraper/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Launching the Desktop UI
 Double-click [`run_gui.bat`](file:///run_gui.bat) or run:

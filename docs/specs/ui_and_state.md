@@ -1,4 +1,4 @@
-# 🖥️ SPEC: User Interface, Reactive State & Theme System
+# SPEC: User Interface, Reactive State & Theme System
 
 ## 1. Appearance & Theme System (`ui/theme.py`)
 - Dark & Light mode palettes fine-tuned for high contrast and readability:

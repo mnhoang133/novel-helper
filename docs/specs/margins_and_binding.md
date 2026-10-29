@@ -1,4 +1,4 @@
-# 📖 SPEC: Margins, Mirror Margins & Book Binding
+# SPEC: Margins, Mirror Margins & Book Binding
 
 ## 1. Physical Book Binding Requirements
 In physical two-sided book printing, sheets are bound together at the central spine.

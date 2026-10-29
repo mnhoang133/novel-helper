@@ -418,11 +418,11 @@ class ModernNovelApp(ctk.CTk):
         now_str = datetime.now().strftime("%H:%M:%S")
         if not tag:
             low = message.lower()
-            if any(w in low for w in ["✓", "thành công", "cào thành công", "đã lưu", "saved", "complete", "hoàn thành", "repaired"]):
+            if any(w in low for w in ["[ok]", "thành công", "cào thành công", "đã lưu", "saved", "complete", "hoàn thành", "repaired"]):
                 tag = "success"
-            elif any(w in low for w in ["✗", "thất bại", "lỗi", "error", "failed", "exception"]):
+            elif any(w in low for w in ["[error]", "thất bại", "lỗi", "error", "failed", "exception"]):
                 tag = "error"
-            elif any(w in low for w in ["⏳", "nghỉ", "warning", "thử lại", "timeout", "cảnh báo", "notice"]):
+            elif any(w in low for w in ["[wait]", "nghỉ", "warning", "thử lại", "timeout", "cảnh báo", "notice"]):
                 tag = "warning"
             else:
                 tag = "info"

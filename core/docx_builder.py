@@ -242,7 +242,7 @@ def export_single_document(
                     p_sep.paragraph_format.space_before = Pt(24)
                     p_sep.paragraph_format.space_after = Pt(16)
                     p_sep.paragraph_format.keep_with_next = True
-                    r_sep = p_sep.add_run("✦   ✦   ✦")
+                    r_sep = p_sep.add_run("*   *   *")
                     r_sep.font.name = font_name
                     r_sep.font.size = Pt(11)
                     r_sep.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
@@ -271,7 +271,7 @@ def export_single_document(
         p_div.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_div.paragraph_format.space_after = Pt(14)
         p_div.paragraph_format.keep_with_next = True  # Keep ornament with text
-        r_div = p_div.add_run("~ ✦ ~")
+        r_div = p_div.add_run("~ * ~")
         r_div.font.name = font_name
         r_div.font.size = Pt(11)
         r_div.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)

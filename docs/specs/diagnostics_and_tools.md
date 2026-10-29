@@ -1,4 +1,4 @@
-# 🛠️ SPEC: Diagnostics, Observability & Debug Tools
+# SPEC: Diagnostics, Observability & Debug Tools
 
 ## 1. Automated Export Audit Report (`print/last_export_report.txt`)
 Whenever a document or batch of volumes is exported, `core/diagnostics.py` automatically generates an audit report in the output `print/` folder.

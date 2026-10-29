@@ -1,4 +1,4 @@
-# 📊 SPEC: Dynamic Page Math & TOC Capacity
+# SPEC: Dynamic Page Math & TOC Capacity
 
 ## 1. Printable Page Dimensions (A4)
 Standard A4 dimensions: **21.0 cm $\times$ 29.7 cm**.

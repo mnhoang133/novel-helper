@@ -1,4 +1,4 @@
-# 🌐 SPEC: Web Scraping & Data Sanitization
+# SPEC: Web Scraping & Data Sanitization
 
 ## 1. Cloudflare Evasion Architecture (`core/scraper.py`)
 - **Engine**: `cloudscraper.Session` with custom browser cookie string and User-Agent headers.
