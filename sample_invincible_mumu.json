@@ -1,0 +1,15 @@
+{
+  "novel_name": "Invincible_Mumu_Novel",
+  "chapter_1_url": "https://novellunar.com/novel/invincible-mumu/chapter/1",
+  "url_pattern": "https://novellunar.com/novel/invincible-mumu/chapter/{}",
+  "start_chapter": 1,
+  "end_chapter": 177,
+  "batch_size": 5,
+  "content_selector": "article",
+  "cookie": "cf_clearance=_XSHG9iik6URzvUldWHj.OenYItPFWB4yHMpoNa0mrI-1793187408-1.2.1.1-dSaWrbEV0ur5n2FaW4lf7UucwHZhpamKVva4EVvwoOYnL3Rq0y4Ay3R7VCxT_iCqujGcVy.7CF.y5AFQWUnrqeXvojCARrYIM_2CyHN660uxtn8dWylqcYL5BsY1rzGCiIr7xQApHk3JpnMBY_LEUibF6hLQFAp6mt4eW9tYY2D6.ju6j_obqV4BHRi6Mw_jExD6pXXmSfsSTj1rWsj_N9OfipPH43PlxZAOSGe6Ys9LN9HSJt7UE3ZLuSTjOo_C4yTCKP_J8V.oFHm4laJAkJ3BHHEtvYGvDb4bTDO4gFeIIFS3TZRrXLtfys7EQasb06hMyvtgPrh1H9lLVWv.HOvDpO96rh06ebKZikjUnSbvfIUO0WlpWQYApyLyYAl7n8c1YXY2de8aBgRaBwcO5Mqi4d4udsGMSXxykq.jfd7y6E2iOpB5S2iIZJTxv_jb.LSHwT4Do3WDeKmjwiXF6HRnCoojazstKdRhImmcXBSSfQpLRtFN0_SJJuGZSBGNTblG5coyXIfWdzr4PaX.fQ; _ga=GA1.1.1735907276.1793187425; __Secure-next-auth.callback-url=https%3A%2F%2Fnovellunar.com; __Host-next-auth.csrf-token=7dedbb1395124f2576054468d55d05cb620ff9c87bf8232bbd71171ce2abd358%7C46f7a3ee42e38c78f35585176a5273e7e19957b6099003f02b7867d720394cdd; _ga_6PBHV8YLG6=GS2.1.s1793190874$o2$g1$t1793190876$j58$l0$h0",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "delay_min": 8.0,
+  "delay_max": 15.0,
+  "timeout": 15.0,
+  "output_dir": "Invincible_Mumu_Novel"
+}

@@ -1,0 +1,3 @@
+"""
+Novel Scraper Core Package
+"""
