@@ -49,7 +49,7 @@ novel_scraper/
 | **Word COM to PDF Conversion** | `core/book_engine.py` | `convert_docx_to_pdf()` |
 | **Chapter Range Auto-Detection** (Scan .txt files) | `core/book_engine.py` | `detect_chapter_range_from_folder()`, `scan_and_collect_chapters()` |
 | **XML / ASCII / Control Character Errors** | `core/cleaner.py` | `sanitize_xml_string()`, `repair_file_inplace()` |
-| **HTML Chapter Scraping & Content Cleaning** | `core/cleaner.py` | `clean_html_article()`, `heal_raw_text()` |
+| **HTML Chapter Scraping & Content Cleaning** | `core/cleaner.py` | `clean_html_article()`, `heal_raw_text()`, `heal_broken_lines()`, `repair_directory_inplace()` |
 | **Scraper Requests, Retries, Cookies, Cloudflare** | `core/scraper.py` | `NovelScraper.scrape_chapter()`, `derive_pattern_from_url()` |
 | **Auto-Detect Novel Folders from History** | `core/session_manager.py` | `discover_novel_folders()`, `save_session()`, `load_session()` |
 | **Light / Dark Mode Palette & Contrast** | `ui/theme.py` | `THEME`, `setup_segmented_button_style()`, `update_console_colors()` |
