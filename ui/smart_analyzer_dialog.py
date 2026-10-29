@@ -161,7 +161,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         if opt.is_recommended:
             badge = ctk.CTkLabel(
                 top_row,
-                text="  [ĐỀ XUẤT TỐI ƯU MỤC LỤC]  ",
+                text="  [TỐI ƯU KHÍT MỤC LỤC & ĐỀU CHƯƠNG]  ",
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
                 fg_color=("#0284c7", "#0369a1"),
                 text_color="#ffffff",

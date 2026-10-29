@@ -30,12 +30,17 @@ $$\text{TOC Capacity} = \text{int}\left(\frac{\text{Printable Height} - 3.2}{0.6
 ---
 
 ## 3. Balanced Volume Partitioning (`core/volume_splitter.py`)
-To prevent the final volume from having an awkward 2-chapter stub:
-1. Compute optimal integer volume count:
-   $$K = \max\left(1, \text{round}\left(\frac{\text{Total Body Lines}}{\text{Target Lines Per Volume}}\right)\right)$$
-2. Equalize target line weight across $K$ volumes:
-   $$\text{Target Weight} = \frac{\text{Total Body Lines}}{K}$$
-3. Continuously accumulate chapters into $K$ volumes, guaranteeing equal thickness.
+To prevent the final volume from having an awkward 2-chapter stub and maximize Table of Contents efficiency:
+1. Supported Tiers:
+   - **Tier Tối ưu (Full TOC & Đều chương)**: Finds the exact $K$ that maximizes TOC fullness (close to 1 or 2 full pages) and divides chapters so that no volume differs from another by more than 1 chapter.
+   - **Tier 1: Mỏng (50 - 100 trang)**
+   - **Tier 2: Chuẩn (100 - 200 trang)**
+   - **Tier 3: Vừa (200 - 300 trang)**
+   - **Tier 4: Dày (300 - 400 trang)**
+2. Equalize chapter counts across $K$ volumes:
+   $$\text{Base Chapters} = \lfloor N / K \rfloor, \quad \text{Remainder} = N \pmod K$$
+   - The first $\text{Remainder}$ volumes receive $\text{Base} + 1$ chapters, and the remaining receive $\text{Base}$ chapters.
+   - Guaranteed equalized chapter distribution and zero orphan stubs.
 
 ---
 

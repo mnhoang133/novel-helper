@@ -54,7 +54,7 @@ def main():
     print(f"Characters / Line   : ~{first.chars_per_line} chars")
     print(f"TOC Entries / Page  : ~{first.toc_entries_per_page} chapters/page\n")
 
-    print(f"--- 3-TIER PARTITION SIMULATION ---")
+    print(f"--- 5-TIER PARTITION SIMULATION ---")
     for key, opt in results.items():
         print(f"\n[{opt.tier_name}]")
         print(f"  • Volumes Count     : {opt.num_volumes} volumes")

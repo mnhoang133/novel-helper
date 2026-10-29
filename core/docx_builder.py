@@ -14,6 +14,7 @@ import math
 import docx
 from docx.shared import Pt, RGBColor, Inches, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml import parse_xml, OxmlElement
 from docx.oxml.ns import nsdecls, qn
 from typing import List, Tuple, Optional, Callable
@@ -202,10 +203,30 @@ def export_single_document(
     if on_progress:
         on_progress(0, total, "Generating Table of Contents...")
 
+    # Configure TOC 1 style (TOC1) for clean, compact line spacing to eliminate page spill
+    try:
+        s_toc1 = doc.styles.add_style('toc 1', WD_STYLE_TYPE.PARAGRAPH)
+    except Exception:
+        try:
+            s_toc1 = doc.styles['toc 1']
+        except Exception:
+            s_toc1 = None
+
+    if s_toc1 is not None:
+        try:
+            s_toc1.element.set(qn('w:styleId'), 'TOC1')
+            s_toc1.font.name = font_name
+            s_toc1.font.size = Pt(10.5)
+            s_toc1.paragraph_format.space_before = Pt(0)
+            s_toc1.paragraph_format.space_after = Pt(1.5)
+            s_toc1.paragraph_format.line_spacing = 1.15
+        except Exception:
+            pass
+
     p_toc_heading = doc.add_paragraph()
     p_toc_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_toc_heading.paragraph_format.space_before = Pt(24)
-    p_toc_heading.paragraph_format.space_after = Pt(24)
+    p_toc_heading.paragraph_format.space_before = Pt(14)
+    p_toc_heading.paragraph_format.space_after = Pt(10)
     r_toc_h = p_toc_heading.add_run("TABLE OF CONTENTS")
     r_toc_h.font.name = font_name
     r_toc_h.font.size = Pt(20)
@@ -213,11 +234,10 @@ def export_single_document(
     r_toc_h.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
 
     p_toc = doc.add_paragraph()
-    p_toc.paragraph_format.space_after = Pt(24)
+    p_toc.paragraph_format.space_before = Pt(0)
+    p_toc.paragraph_format.space_after = Pt(0)
     run_toc_field = p_toc.add_run()
     add_xml_field(run_toc_field, r'TOC \o "1-1" \h \z \u')
-
-    doc.add_page_break()
 
     # ----------------- CHAPTERS & SMART PAGINATION -----------------
     lines_on_current_page = 0.0
@@ -259,6 +279,9 @@ def export_single_document(
         # Chapter Header (Prominent, 26-30pt)
         h = doc.add_heading(level=1)
         h.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        # Ensure Chapter 1 starts on a fresh page after TOC without inserting an empty paragraph
+        if i == 0:
+            h.paragraph_format.page_break_before = True
         h.paragraph_format.space_before = Pt(20) if lines_on_current_page == 0 else Pt(10)
         h.paragraph_format.space_after = Pt(8)
         h.paragraph_format.keep_with_next = True  # NEVER separate heading from content

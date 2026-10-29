@@ -214,7 +214,7 @@ Modal dialog for volume balancing and TOC fit analysis.
 - **`SmartVolumeAnalyzerDialog(parent, chapters, on_select_tier)`**
   - Displays:
     - Total detected chapters and estimated total book pages.
-    - 3 Interactive Tier Cards (Mỏng 50-100 trang, Chuẩn 100-200 trang, Dày 300-400 trang).
+    - 5 Interactive Tier Cards (Tối ưu Khít Mục lục & Đều chương, Mỏng 50-100 trang, Chuẩn 100-200 trang, Vừa 200-300 trang, Dày 300-400 trang).
     - For each tier: Volume count, Average pages per volume, Average chapters per volume, and **TOC Fit Rating** (e.g. `[TOC Fit] Rất khít (1 trang mục lục, lấp đầy 91%)`).
     - Detailed chapter breakdown per volume (e.g. `Tập 1: Chap 1 -> 26 (~308 trang)`).
   - "Áp dụng cấu hình này" button: Immediately sets target pages in Tab 2 and closes the dialog.
