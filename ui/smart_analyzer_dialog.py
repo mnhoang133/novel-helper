@@ -133,9 +133,17 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         btn_close.pack(anchor="e", padx=20, pady=(0, 16))
 
     def _render_tier_card(self, parent, opt: VolumeSplitOption):
-        # Card container
-        border_col = ("#38bdf8", "#0284c7") if opt.is_recommended else ("#cbd5e1", "#334155")
-        border_w = 2 if opt.is_recommended else 1
+        # Card container with color-coded highlight for optimal tiers
+        badge_str = getattr(opt, "badge_text", "")
+        if opt.is_recommended:
+            if "2 TRANG" in badge_str:
+                border_col = ("#34d399", "#059669")
+            else:
+                border_col = ("#38bdf8", "#0284c7")
+            border_w = 2
+        else:
+            border_col = ("#cbd5e1", "#334155")
+            border_w = 1
 
         card = ctk.CTkFrame(
             parent,
@@ -158,7 +166,18 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         )
         lbl_name.pack(side="left")
 
-        if opt.is_recommended:
+        if badge_str:
+            badge_color = ("#0284c7", "#0369a1") if "1 TRANG" in badge_str else ("#059669", "#047857")
+            badge = ctk.CTkLabel(
+                top_row,
+                text=f"  {badge_str}  ",
+                font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
+                fg_color=badge_color,
+                text_color="#ffffff",
+                corner_radius=6
+            )
+            badge.pack(side="left", padx=10)
+        elif opt.is_recommended:
             badge = ctk.CTkLabel(
                 top_row,
                 text="  [TỐI ƯU KHÍT MỤC LỤC & ĐỀU CHƯƠNG]  ",

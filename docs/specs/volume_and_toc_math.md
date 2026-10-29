@@ -32,7 +32,8 @@ $$\text{TOC Capacity} = \text{int}\left(\frac{\text{Printable Height} - 3.2}{0.6
 ## 3. Balanced Volume Partitioning (`core/volume_splitter.py`)
 To prevent the final volume from having an awkward 2-chapter stub and maximize Table of Contents efficiency:
 1. Supported Tiers:
-   - **Tier Tối ưu (Full TOC & Đều chương)**: Finds the exact $K$ that maximizes TOC fullness (close to 1 or 2 full pages) and divides chapters so that no volume differs from another by more than 1 chapter.
+   - **Tier Tối ưu 1 (Full 1 trang TOC)**: Finds the exact $K$ that maximizes TOC fullness on 1 single page (~95% full), dividing chapters evenly so no volume differs from another by more than 1 chapter.
+   - **Tier Tối ưu 2 (Full 2 trang TOC - Cuốn dày / Chap ngắn)**: Finds the exact $K$ that fills 2 full TOC pages (~60-80 chapters/vol), tailored for thick volumes or novels with short chapters.
    - **Tier 1: Mỏng (50 - 100 trang)**
    - **Tier 2: Chuẩn (100 - 200 trang)**
    - **Tier 3: Vừa (200 - 300 trang)**

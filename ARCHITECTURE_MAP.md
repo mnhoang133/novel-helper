@@ -28,7 +28,7 @@ novel_scraper/
 │   ├── theme.py               # Color palettes (Light/Dark), segmented buttons, console syntax colors
 │   ├── tab_scraper.py         # Tab 1: Web Scraper controls, network settings, folder pickers
 │   ├── tab_publisher.py       # Tab 2: Book Publisher controls, range detector, custom & mirror margins
-│   └── smart_analyzer_dialog.py # Interactive 3-Tier Volume Partitioning & TOC Optimization modal
+│   └── smart_analyzer_dialog.py # Interactive 6-Tier Volume Partitioning & TOC Optimization modal (Full 1-Page TOC, Full 2-Page TOC, and Page-bound Tiers)
 │
 └── [Facades / Backwards-Compatibility Adapters]
     ├── word_exporter.py       # Re-exports all functions from core.book_engine

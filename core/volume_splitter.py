@@ -34,6 +34,7 @@ class VolumeSplitOption:
     lines_per_page: float = 32.0
     chars_per_line: int = 68
     toc_entries_per_page: int = 32
+    badge_text: str = ""
 
 
 def partition_chapters_balanced(
@@ -131,62 +132,99 @@ def analyze_optimal_volume_splits(
     results = {}
 
     # -------------------------------------------------------------------------
-    # 1. SPECIAL TIER: TỐI ƯU MỤC LỤC & CHIA ĐỀU CHƯƠNG NHẤT
+    # 1. SPECIAL TIER 1: TỐI ƯU 1 TRANG MỤC LỤC (FULL 1-PAGE TOC)
     # -------------------------------------------------------------------------
-    best_k = 1
-    best_score = -999.0
+    best_k_1p = 1
+    best_score_1p = -999.0
 
     for cand_k in range(1, min(total_chapters + 1, 30)):
         avg_ch_cand = total_chapters / float(cand_k)
         if avg_ch_cand <= toc_entries_per_page:
-            # 1 page TOC: want fill close to 95%
             fill_cand = (avg_ch_cand / float(toc_entries_per_page)) * 100.0
             score = 100.0 - abs(95.0 - fill_cand) * 1.5
-        elif avg_ch_cand <= toc_entries_per_page * 2:
-            # 2 page TOC: want page 2 fill close to 90%
-            p2 = avg_ch_cand - toc_entries_per_page
-            fill_p2 = (p2 / float(toc_entries_per_page)) * 100.0
-            score = 85.0 - abs(90.0 - fill_p2) * 1.5
-        else:
-            pages_c = (avg_ch_cand + toc_entries_per_page - 1) // toc_entries_per_page
-            score = 10.0 - pages_c * 10.0
+            if 15 <= avg_ch_cand <= 45:
+                score += 5.0
+            if score > best_score_1p:
+                best_score_1p = score
+                best_k_1p = cand_k
 
-        # Preference for reasonable volume thickness (20 to 65 chapters)
-        if 20 <= avg_ch_cand <= 65:
-            score += 5.0
+    opt_ranges_1p = partition_chapters_balanced(chapter_metrics, best_k_1p, lines_per_page)
+    opt_avg_ch_1p = round(total_chapters / float(best_k_1p))
+    opt_avg_pg_1p = round(sum(vr[3] for vr in opt_ranges_1p) / float(best_k_1p), 1)
+    toc_p1, toc_f1, toc_q1 = _evaluate_toc_quality(opt_avg_ch_1p, toc_entries_per_page)
 
-        if score > best_score:
-            best_score = score
-            best_k = cand_k
-
-    # Generate Special Tier
-    opt_ranges = partition_chapters_balanced(chapter_metrics, best_k, lines_per_page)
-    opt_avg_ch = round(total_chapters / float(best_k))
-    opt_avg_pg = round(sum(vr[3] for vr in opt_ranges) / float(best_k), 1)
-    toc_p, toc_f, toc_q = _evaluate_toc_quality(opt_avg_ch, toc_entries_per_page)
-
-    tier_opt_label = "Tier Tối ưu: Khít Mục lục & Đều chương (Full TOC 1-2 trang)"
-    summary_opt = (
-        f"TỐI ƯU MỤC LỤC: Chia đều chính xác {best_k} tập (mỗi tập {opt_avg_ch} chương, chênh lệch tối đa 1 chương).\n"
-        f"Ước tính: ~{opt_avg_pg} trang/tập. Đánh giá Mục lục: {toc_q}"
+    tier_label_1p = "Tier Tối ưu 1: Khít 1 trang Mục lục (Full 1 trang TOC)"
+    summary_1p = (
+        f"TỐI ƯU 1 TRANG MỤC LỤC: Chia đều {best_k_1p} tập (~{opt_avg_ch_1p} chương/tập, chênh lệch tối đa 1 chương).\n"
+        f"Ước tính: ~{opt_avg_pg_1p} trang/tập. Đánh giá Mục lục: {toc_q1}"
     )
 
-    results[tier_opt_label] = VolumeSplitOption(
-        tier_name=tier_opt_label,
-        num_volumes=best_k,
-        target_pages=int(round(opt_avg_pg)),
-        avg_chapters_per_vol=opt_avg_ch,
-        avg_pages_per_vol=opt_avg_pg,
-        toc_pages_per_vol=toc_p,
-        toc_fill_percentage=toc_f,
-        toc_quality_rating=toc_q,
+    results[tier_label_1p] = VolumeSplitOption(
+        tier_name=tier_label_1p,
+        num_volumes=best_k_1p,
+        target_pages=int(round(opt_avg_pg_1p)),
+        avg_chapters_per_vol=opt_avg_ch_1p,
+        avg_pages_per_vol=opt_avg_pg_1p,
+        toc_pages_per_vol=toc_p1,
+        toc_fill_percentage=toc_f1,
+        toc_quality_rating=toc_q1,
         is_recommended=True,
-        summary_text=summary_opt,
-        volume_ranges=opt_ranges,
+        summary_text=summary_1p,
+        volume_ranges=opt_ranges_1p,
         lines_per_page=lines_per_page,
         chars_per_line=chars_per_line,
-        toc_entries_per_page=toc_entries_per_page
+        toc_entries_per_page=toc_entries_per_page,
+        badge_text="[TỐI ƯU 1 TRANG TOC - ĐỀU CHƯƠNG]"
     )
+
+    # -------------------------------------------------------------------------
+    # 2. SPECIAL TIER 2: TỐI ƯU 2 TRANG MỤC LỤC (FULL 2-PAGE TOC - CUỐN DÀY / CHAP NGẮN)
+    # -------------------------------------------------------------------------
+    if total_chapters > toc_entries_per_page:
+        best_k_2p = 1
+        best_score_2p = -999.0
+
+        for cand_k in range(1, min(total_chapters + 1, 30)):
+            avg_ch_cand = total_chapters / float(cand_k)
+            if toc_entries_per_page < avg_ch_cand <= toc_entries_per_page * 2:
+                p2 = avg_ch_cand - toc_entries_per_page
+                fill_p2 = (p2 / float(toc_entries_per_page)) * 100.0
+                score = 100.0 - abs(95.0 - fill_p2) * 1.5
+                if 45 <= avg_ch_cand <= 85:
+                    score += 5.0
+                if score > best_score_2p:
+                    best_score_2p = score
+                    best_k_2p = cand_k
+
+        if best_score_2p > -900.0:
+            opt_ranges_2p = partition_chapters_balanced(chapter_metrics, best_k_2p, lines_per_page)
+            opt_avg_ch_2p = round(total_chapters / float(best_k_2p))
+            opt_avg_pg_2p = round(sum(vr[3] for vr in opt_ranges_2p) / float(best_k_2p), 1)
+            toc_p2, toc_f2, toc_q2 = _evaluate_toc_quality(opt_avg_ch_2p, toc_entries_per_page)
+
+            tier_label_2p = "Tier Tối ưu 2: Khít 2 trang Mục lục (Full 2 trang TOC - Cuốn dày / Chap ngắn)"
+            summary_2p = (
+                f"TỐI ƯU 2 TRANG MỤC LỤC: Chia đều {best_k_2p} tập (~{opt_avg_ch_2p} chương/tập, chênh lệch tối đa 1 chương).\n"
+                f"Ước tính: ~{opt_avg_pg_2p} trang/tập. Đánh giá Mục lục: {toc_q2}"
+            )
+
+            results[tier_label_2p] = VolumeSplitOption(
+                tier_name=tier_label_2p,
+                num_volumes=best_k_2p,
+                target_pages=int(round(opt_avg_pg_2p)),
+                avg_chapters_per_vol=opt_avg_ch_2p,
+                avg_pages_per_vol=opt_avg_pg_2p,
+                toc_pages_per_vol=toc_p2,
+                toc_fill_percentage=toc_f2,
+                toc_quality_rating=toc_q2,
+                is_recommended=True,
+                summary_text=summary_2p,
+                volume_ranges=opt_ranges_2p,
+                lines_per_page=lines_per_page,
+                chars_per_line=chars_per_line,
+                toc_entries_per_page=toc_entries_per_page,
+                badge_text="[TỐI ƯU 2 TRANG TOC - CUỐN DÀY]"
+            )
 
     # -------------------------------------------------------------------------
     # 2. STANDARD PAGE BOUND TIERS (50-100, 100-200, 200-300, 300-400)
