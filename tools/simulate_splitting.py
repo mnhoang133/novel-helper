@@ -2,7 +2,7 @@
 Tool: simulate_splitting.py
 Description: Fast simulation tool to calculate real printable lines, dynamic TOC capacity,
              and balanced volume partitions without generating Word/PDF documents.
-Usage: python tools/simulate_splitting.py <novel_folder> [inside_cm] [outside_cm] [top_cm] [bottom_cm]
+Usage: python tools/simulate_splitting.py <novel_folder> [inside_cm] [outside_cm] [top_cm] [bottom_cm] [start_ch] [end_ch]
 """
 
 import sys
@@ -22,7 +22,7 @@ from core.volume_splitter import analyze_optimal_volume_splits
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python tools/simulate_splitting.py <novel_folder> [inside_cm] [outside_cm] [top_cm] [bottom_cm]")
+        print("Usage: python tools/simulate_splitting.py <novel_folder> [inside_cm] [outside_cm] [top_cm] [bottom_cm] [start_ch] [end_ch]")
         sys.exit(1)
 
     folder = sys.argv[1]
@@ -30,11 +30,14 @@ def main():
     outside_m = float(sys.argv[3]) if len(sys.argv) > 3 else 1.2
     top_m = float(sys.argv[4]) if len(sys.argv) > 4 else 1.2
     bot_m = float(sys.argv[5]) if len(sys.argv) > 5 else 1.2
+    start_c = int(sys.argv[6]) if len(sys.argv) > 6 and sys.argv[6].isdigit() else None
+    end_c = int(sys.argv[7]) if len(sys.argv) > 7 and sys.argv[7].isdigit() else None
 
-    print(f"Scanning chapters in: {folder}")
-    chapters = scan_and_collect_chapters(folder)
+    range_txt = f" (Ch {start_c} to {end_c})" if (start_c or end_c) else " (All Chapters)"
+    print(f"Scanning chapters in: {folder}{range_txt}")
+    chapters = scan_and_collect_chapters(folder, start_chapter=start_c, end_chapter=end_c)
     if not chapters:
-        print("No chapters found in specified folder.")
+        print("No chapters found in specified folder/range.")
         sys.exit(1)
 
     print(f"Total Chapters Found: {len(chapters)} (Ch {chapters[0][0]} to Ch {chapters[-1][0]})")

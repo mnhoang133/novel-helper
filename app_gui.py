@@ -668,15 +668,36 @@ class ModernNovelApp(ctk.CTk):
         self.log_message("Reset margins to standard: Inside 2.0cm, Outside 1.2cm, Top/Bottom 1.2cm, Mirror Margins ON.", "info")
 
     def _open_smart_analyzer_modal(self):
-        """Opens the Smart Volume Analyzer & TOC Optimizer Dialog adapted to user margins."""
+        """Opens the Smart Volume Analyzer & TOC Optimizer Dialog adapted to user margins and chapter range."""
         folder = self.entry_pub_src_dir.get().strip()
         if not os.path.isdir(folder):
             messagebox.showwarning("Notice", f"Source directory does not exist:\n{folder}")
             return
 
-        chapters = scan_and_collect_chapters(folder)
-        if not chapters:
+        all_chapters = scan_and_collect_chapters(folder)
+        if not all_chapters:
             messagebox.showwarning("Notice", "No chapters found to analyze. Please scan or download chapters first.")
+            return
+
+        # Parse publish chapter range if specified
+        pub_start_raw = self.entry_pub_start_ch.get().strip() if hasattr(self, 'entry_pub_start_ch') else ""
+        pub_end_raw = self.entry_pub_end_ch.get().strip() if hasattr(self, 'entry_pub_end_ch') else ""
+        pub_start = int(pub_start_raw) if pub_start_raw.isdigit() else None
+        pub_end = int(pub_end_raw) if pub_end_raw.isdigit() else None
+
+        if pub_start is not None and pub_end is not None and pub_end < pub_start:
+            messagebox.showerror("Range Error", f"End Chapter ({pub_end}) cannot be smaller than Start Chapter ({pub_start})!")
+            return
+
+        # Filter chapters according to user range
+        chapters = [
+            ch for ch in all_chapters
+            if (pub_start is None or ch[0] >= pub_start) and (pub_end is None or ch[0] <= pub_end)
+        ]
+
+        if not chapters:
+            range_txt = f"within range Ch {pub_start} to Ch {pub_end}" if (pub_start or pub_end) else ""
+            messagebox.showwarning("Notice", f"No chapters found {range_txt} to analyze.")
             return
 
         try:
@@ -704,15 +725,25 @@ class ModernNovelApp(ctk.CTk):
                 f"• Mục lục: {opt.toc_quality_rating}"
             )
 
+        def on_range_sync(new_start: int, new_end: int):
+            if hasattr(self, 'entry_pub_start_ch'):
+                self.entry_pub_start_ch.delete(0, "end")
+                self.entry_pub_start_ch.insert(0, str(new_start))
+            if hasattr(self, 'entry_pub_end_ch'):
+                self.entry_pub_end_ch.delete(0, "end")
+                self.entry_pub_end_ch.insert(0, str(new_end))
+
         SmartVolumeAnalyzerDialog(
             self,
-            chapters,
-            on_tier_applied,
+            chapters=chapters,
+            on_select_tier=on_tier_applied,
             inside_margin_cm=inside_m,
             outside_margin_cm=outside_m,
             top_margin_cm=top_m,
             bottom_margin_cm=bot_m,
-            body_font_size=body_size
+            body_font_size=body_size,
+            all_chapters=all_chapters,
+            on_range_changed=on_range_sync
         )
 
     def _repair_txt_files_in_folder(self):

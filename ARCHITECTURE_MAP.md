@@ -55,7 +55,7 @@ novel_scraper/
 | **Light / Dark Mode Palette & Contrast** | `ui/theme.py` | `THEME`, `setup_segmented_button_style()`, `update_console_colors()` |
 | **Scraper Tab Controls & Responsive Grid** | `ui/tab_scraper.py` | `build_scraper_tab()` |
 | **Publisher Tab Layout, Margins, Inputs** | `ui/tab_publisher.py` | `build_publisher_tab()` |
-| **3-Tier Smart Analyzer Modal Dialog** | `ui/smart_analyzer_dialog.py` | `SmartVolumeAnalyzerDialog` |
+| **Smart Volume Analyzer Modal Dialog** | `ui/smart_analyzer_dialog.py` | `SmartVolumeAnalyzerDialog` (Arbitrary Start/End Chapter Range Support) |
 | **GUI Event Handlers, Logging, Threading** | `app_gui.py` | `ModernNovelApp` methods (`_start_scraping`, `_start_publishing`, etc.) |
 
 ---

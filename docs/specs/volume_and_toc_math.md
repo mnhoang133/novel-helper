@@ -45,8 +45,12 @@ To prevent the final volume from having an awkward 2-chapter stub and maximize T
 
 ---
 
-## 4. Verification Tool
-Simulate volume partitions and TOC fit instantly:
+## 4. Verification & Simulation Tool
+Simulate volume partitions and TOC fit instantly for any folder or arbitrary sub-range:
 ```bash
+# Full novel:
 python tools/simulate_splitting.py "novel_folder" 1.2 0.6 0.6 0.6
+
+# Sub-range only (e.g. Chapters 71 to 174):
+python tools/simulate_splitting.py "novel_folder" 1.2 0.6 0.6 0.6 71 174
 ```

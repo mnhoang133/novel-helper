@@ -1,12 +1,13 @@
 """
 Module: ui.smart_analyzer_dialog
 Description: Interactive modal dialog displaying exact real line-based volume partitions,
-             TOC efficiency ratings, and 1-click tier selection (50-100, 100-200, 300-400 pages).
+             TOC efficiency ratings, range filtering, and 1-click tier selection.
 Author: Google Deepmind Agent
 """
 
 import customtkinter as ctk
-from typing import List, Tuple, Callable
+from tkinter import messagebox
+from typing import List, Tuple, Callable, Optional
 from core.book_engine import (
     analyze_optimal_volume_splits,
     VolumeSplitOption,
@@ -24,17 +25,21 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         outside_margin_cm: float = 1.2,
         top_margin_cm: float = 1.2,
         bottom_margin_cm: float = 1.2,
-        body_font_size: int = 14
+        body_font_size: int = 14,
+        all_chapters: Optional[List[Tuple[int, str, str]]] = None,
+        on_range_changed: Optional[Callable[[int, int], None]] = None
     ):
         super().__init__(parent)
         self.title("Smart Volume Analyzer & TOC Optimizer")
-        self.geometry("800x660")
-        self.minsize(740, 600)
+        self.geometry("820x680")
+        self.minsize(760, 620)
         self.transient(parent)
         self.grab_set()
 
-        self.chapters = chapters
+        self.chapters = list(chapters)
+        self.all_chapters = list(all_chapters if all_chapters is not None else chapters)
         self.on_select_tier = on_select_tier
+        self.on_range_changed = on_range_changed
         self.inside_margin_cm = float(inside_margin_cm)
         self.outside_margin_cm = float(outside_margin_cm)
         self.top_margin_cm = float(top_margin_cm)
@@ -49,7 +54,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
     def _build_ui(self):
         # 1. Header Banner
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.pack(fill="x", padx=20, pady=(16, 6))
+        header.pack(fill="x", padx=20, pady=(16, 4))
 
         lbl_title = ctk.CTkLabel(
             header,
@@ -59,11 +64,136 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         )
         lbl_title.pack(anchor="w")
 
-        total_ch = len(self.chapters)
-        min_c = self.chapters[0][0] if self.chapters else 0
-        max_c = self.chapters[-1][0] if self.chapters else 0
+        # Range selector row
+        range_frame = ctk.CTkFrame(header, fg_color="transparent")
+        range_frame.pack(fill="x", pady=(6, 4))
 
-        # Run analysis dynamically adapted to user margins
+        ctk.CTkLabel(
+            range_frame,
+            text="Phạm vi phân tích:",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color=("#334155", "#cbd5e1")
+        ).pack(side="left", padx=(0, 6))
+
+        cur_min = self.chapters[0][0] if self.chapters else 1
+        cur_max = self.chapters[-1][0] if self.chapters else 1
+
+        ctk.CTkLabel(range_frame, text="Từ Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
+        self.entry_start = ctk.CTkEntry(range_frame, width=65, height=26, corner_radius=5)
+        self.entry_start.insert(0, str(cur_min))
+        self.entry_start.pack(side="left", padx=(0, 8))
+
+        ctk.CTkLabel(range_frame, text="Đến Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
+        self.entry_end = ctk.CTkEntry(range_frame, width=65, height=26, corner_radius=5)
+        self.entry_end.insert(0, str(cur_max))
+        self.entry_end.pack(side="left", padx=(0, 10))
+
+        btn_filter = ctk.CTkButton(
+            range_frame,
+            text="Cập nhật phạm vi",
+            width=125,
+            height=26,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            fg_color=("#0284c7", "#0369a1"),
+            hover_color=("#0369a1", "#075985"),
+            text_color="#ffffff",
+            command=self._on_update_range
+        )
+        btn_filter.pack(side="left", padx=(0, 8))
+
+        btn_all = ctk.CTkButton(
+            range_frame,
+            text="Tất cả (1-End)",
+            width=105,
+            height=26,
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            fg_color=("#ffffff", "#1e293b"),
+            hover_color=("#f1f5f9", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            border_width=1,
+            border_color=("#cbd5e1", "#475569"),
+            command=self._on_reset_all_range
+        )
+        btn_all.pack(side="left")
+
+        # Range description label
+        self.lbl_desc = ctk.CTkLabel(
+            header,
+            text="",
+            font=ctk.CTkFont(family="Segoe UI", size=11),
+            text_color=("#64748b", "#94a3b8"),
+            wraplength=770,
+            justify="left"
+        )
+        self.lbl_desc.pack(anchor="w", pady=(2, 4))
+
+        # Dynamic Metrics Banner
+        meta_frame = ctk.CTkFrame(header, fg_color=("#e2e8f0", "#1e293b"), corner_radius=6)
+        meta_frame.pack(fill="x", pady=(2, 4))
+
+        printable_h = max(15.0, 29.7 - (self.top_margin_cm + self.bottom_margin_cm))
+        printable_w = max(10.0, 21.0 - (self.inside_margin_cm + self.outside_margin_cm))
+        from core.page_metrics import calculate_lines_per_page, calculate_chars_per_line, calculate_toc_entries_per_page
+        l_per_p = calculate_lines_per_page(printable_h, self.body_font_size)
+        c_per_l = calculate_chars_per_line(printable_w, self.body_font_size)
+        toc_cap = calculate_toc_entries_per_page(printable_h)
+
+        meta_txt = (
+            f"[Căn lề áp dụng]: Gáy {self.inside_margin_cm}cm • Mép {self.outside_margin_cm}cm • Trên/Dưới {self.top_margin_cm}/{self.bottom_margin_cm}cm • Font {self.body_font_size}pt\n"
+            f"[Sức chứa trang in]: ~{l_per_p} dòng/trang • ~{c_per_l} ký tự/dòng  |  Mục lục: ~{toc_cap} chương/trang"
+        )
+        ctk.CTkLabel(
+            meta_frame,
+            text=meta_txt,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color=("#0f172a", "#f8fafc"),
+            justify="left"
+        ).pack(anchor="w", padx=12, pady=5)
+
+        # 2. Scrollable Container for Tier Cards
+        self.content = ctk.CTkScrollableFrame(
+            self,
+            fg_color="transparent",
+            corner_radius=0
+        )
+        self.content.pack(fill="both", expand=True, padx=20, pady=(4, 10))
+
+        # 3. Bottom Close Button
+        btn_close = ctk.CTkButton(
+            self,
+            text="Đóng",
+            width=100,
+            height=32,
+            fg_color=("#e2e8f0", "#1e293b"),
+            hover_color=("#cbd5e1", "#334155"),
+            text_color=("#334155", "#cbd5e1"),
+            command=self.destroy
+        )
+        btn_close.pack(anchor="e", padx=20, pady=(0, 14))
+
+        self._refresh_analysis()
+
+    def _refresh_analysis(self):
+        # Clear existing cards
+        for widget in self.content.winfo_children():
+            widget.destroy()
+
+        if not self.chapters:
+            self.lbl_desc.configure(text="Không có chương nào trong phạm vi được chọn.")
+            return
+
+        total_ch = len(self.chapters)
+        min_c = self.chapters[0][0]
+        max_c = self.chapters[-1][0]
+
+        self.lbl_desc.configure(
+            text=(
+                f"Đang phân tích {total_ch} chương (Chương {min_c} đến {max_c}). "
+                f"Các mốc phân tập được tính toán riêng biệt cho phạm vi này, "
+                f"đảm bảo các tập sách chia đều chương và tối ưu mục lục hoàn hảo."
+            )
+        )
+
         analysis = analyze_optimal_volume_splits(
             self.chapters,
             inside_margin_cm=self.inside_margin_cm,
@@ -73,67 +203,44 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
             body_font_size=self.body_font_size
         )
 
-        first_opt = next(iter(analysis.values())) if analysis else None
-        l_per_p = first_opt.lines_per_page if first_opt else 32.0
-        c_per_l = first_opt.chars_per_line if first_opt else 68
-        toc_cap = first_opt.toc_entries_per_page if first_opt else 32
-
-        lbl_desc = ctk.CTkLabel(
-            header,
-            text=(
-                f"Đã đọc thực tế {total_ch} chương (Ch {min_c} đến Ch {max_c}). "
-                f"Các mốc phân tập dưới đây được tính toán dựa trên đúng thông số căn lề và cỡ chữ bạn đã nhập, "
-                f"tối ưu số chương vừa khít với sức chứa của trang mục lục."
-            ),
-            font=ctk.CTkFont(family="Segoe UI", size=11),
-            text_color=("#64748b", "#94a3b8"),
-            wraplength=750,
-            justify="left"
-        )
-        lbl_desc.pack(anchor="w", pady=(2, 6))
-
-        # Dynamic Metrics Banner
-        meta_frame = ctk.CTkFrame(header, fg_color=("#e2e8f0", "#1e293b"), corner_radius=6)
-        meta_frame.pack(fill="x", pady=(2, 6))
-
-        meta_txt = (
-            f"[Căn lề áp dụng]: Gáy {self.inside_margin_cm}cm • Mép {self.outside_margin_cm}cm • Trên/Dưới {self.top_margin_cm}/{self.bottom_margin_cm}cm • Font {self.body_font_size}pt\n"
-            f"[Sức chứa trang in]: ~{l_per_p} dòng/trang • ~{c_per_l} ký tự/dòng  |  Mục lục: ~{toc_cap} chương/trang (Tự động thích ứng)"
-        )
-        ctk.CTkLabel(
-            meta_frame,
-            text=meta_txt,
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
-            text_color=("#0f172a", "#f8fafc"),
-            justify="left"
-        ).pack(anchor="w", padx=12, pady=6)
-
-        # 2. Scrollable Container for the 3 Tiers
-        content = ctk.CTkScrollableFrame(
-            self,
-            fg_color="transparent",
-            corner_radius=0
-        )
-        content.pack(fill="both", expand=True, padx=20, pady=(4, 12))
-
         for tier_key, opt in analysis.items():
-            self._render_tier_card(content, opt)
+            self._render_tier_card(self.content, opt)
 
-        # 3. Bottom Close Button
-        btn_close = ctk.CTkButton(
-            self,
-            text="Đóng",
-            width=100,
-            height=34,
-            fg_color=("#e2e8f0", "#1e293b"),
-            hover_color=("#cbd5e1", "#334155"),
-            text_color=("#334155", "#cbd5e1"),
-            command=self.destroy
-        )
-        btn_close.pack(anchor="e", padx=20, pady=(0, 16))
+    def _on_update_range(self):
+        s_raw = self.entry_start.get().strip()
+        e_raw = self.entry_end.get().strip()
+        s_val = int(s_raw) if s_raw.isdigit() else None
+        e_val = int(e_raw) if e_raw.isdigit() else None
+
+        if s_val is not None and e_val is not None and e_val < s_val:
+            messagebox.showerror("Lỗi phạm vi", f"Chương kết thúc ({e_val}) không thể nhỏ hơn chương bắt đầu ({s_val})!")
+            return
+
+        filtered = [
+            ch for ch in self.all_chapters
+            if (s_val is None or ch[0] >= s_val) and (e_val is None or ch[0] <= e_val)
+        ]
+
+        if not filtered:
+            messagebox.showwarning("Thông báo", f"Không tìm thấy chương nào trong khoảng Ch {s_val} đến Ch {e_val}.")
+            return
+
+        self.chapters = filtered
+        self._refresh_analysis()
+
+    def _on_reset_all_range(self):
+        if not self.all_chapters:
+            return
+        self.chapters = list(self.all_chapters)
+        first_c = self.chapters[0][0]
+        last_c = self.chapters[-1][0]
+        self.entry_start.delete(0, "end")
+        self.entry_start.insert(0, str(first_c))
+        self.entry_end.delete(0, "end")
+        self.entry_end.insert(0, str(last_c))
+        self._refresh_analysis()
 
     def _render_tier_card(self, parent, opt: VolumeSplitOption):
-        # Card container with color-coded highlight for optimal tiers
         badge_str = getattr(opt, "badge_text", "")
         if opt.is_recommended:
             if "2 TRANG" in badge_str:
@@ -241,6 +348,8 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         ).pack(anchor="w", padx=16, pady=(0, 12))
 
     def _apply_and_close(self, opt: VolumeSplitOption):
+        if self.on_range_changed and self.chapters:
+            self.on_range_changed(self.chapters[0][0], self.chapters[-1][0])
         if self.on_select_tier:
             self.on_select_tier(opt)
         self.destroy()
