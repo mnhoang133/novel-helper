@@ -17,6 +17,12 @@ def convert_docx_to_pdf(docx_path: str, pdf_path: str) -> bool:
     docx_abs = os.path.abspath(docx_path).replace("'", "''")
     pdf_abs = os.path.abspath(pdf_path).replace("'", "''")
 
+    if os.path.isfile(pdf_path):
+        try:
+            os.remove(pdf_path)
+        except Exception:
+            pass
+
     ps_cmd = f"""
     $word = New-Object -ComObject Word.Application
     $word.Visible = $false

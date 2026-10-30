@@ -107,8 +107,10 @@ def export_single_document(
 
     # ----------------- SECTION MARGINS & MIRROR MARGINS -----------------
     sec = doc.sections[0]
-    sec.left_margin = Cm(effective_inside_cm)     # Inside margin (Gáy sách)
-    sec.right_margin = Cm(effective_outside_cm)   # Outside margin (Mép ngoài)
+    sec.page_width = Cm(21.0)                     # Physical A4 Width
+    sec.page_height = Cm(29.7)                    # Physical A4 Height
+    sec.left_margin = Cm(effective_inside_cm)     # Inside margin (Gay sach)
+    sec.right_margin = Cm(effective_outside_cm)   # Outside margin (Mep ngoai)
     sec.top_margin = Cm(top_margin_cm)
     sec.bottom_margin = Cm(bottom_margin_cm)
     sec.footer_distance = Cm(footer_distance_cm)
@@ -216,27 +218,29 @@ def export_single_document(
         try:
             s_toc1.element.set(qn('w:styleId'), 'TOC1')
             s_toc1.font.name = font_name
-            s_toc1.font.size = Pt(10.5)
+            s_toc1.font.size = Pt(10)
             s_toc1.paragraph_format.space_before = Pt(0)
-            s_toc1.paragraph_format.space_after = Pt(1.5)
-            s_toc1.paragraph_format.line_spacing = 1.15
+            s_toc1.paragraph_format.space_after = Pt(1.0)
+            s_toc1.paragraph_format.line_spacing = 1.1
         except Exception:
             pass
 
     p_toc_heading = doc.add_paragraph()
     p_toc_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_toc_heading.paragraph_format.space_before = Pt(14)
-    p_toc_heading.paragraph_format.space_after = Pt(10)
+    p_toc_heading.paragraph_format.space_before = Pt(8)
+    p_toc_heading.paragraph_format.space_after = Pt(6)
     r_toc_h = p_toc_heading.add_run("TABLE OF CONTENTS")
     r_toc_h.font.name = font_name
-    r_toc_h.font.size = Pt(20)
+    r_toc_h.font.size = Pt(18)
     r_toc_h.font.bold = True
     r_toc_h.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
 
     p_toc = doc.add_paragraph()
     p_toc.paragraph_format.space_before = Pt(0)
     p_toc.paragraph_format.space_after = Pt(0)
+    p_toc.paragraph_format.line_spacing = Pt(1)
     run_toc_field = p_toc.add_run()
+    run_toc_field.font.size = Pt(1)
     add_xml_field(run_toc_field, r'TOC \o "1-1" \h \z \u')
 
     # ----------------- CHAPTERS & SMART PAGINATION -----------------
