@@ -7,7 +7,7 @@ Author: Google Deepmind Agent
 
 import os
 from typing import Dict, List, Tuple, Any, Optional
-import fitz
+import pymupdf as fitz
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -29,7 +29,16 @@ def audit_pdf_print_safety(pdf_path: str) -> Dict[str, Any]:
     if not os.path.isfile(pdf_path):
         return {"success": False, "error": f"File not found: {pdf_path}"}
 
-    doc = fitz.open(pdf_path)
+    base = os.path.basename(pdf_path)
+    if base.startswith("~$") or base.startswith("."):
+        return {"success": False, "error": f"Skipping temporary lock file: {base}"}
+
+    try:
+        if os.path.getsize(pdf_path) < 1024:
+            return {"success": False, "error": f"File is too small or incomplete: {base}"}
+        doc = fitz.open(pdf_path)
+    except Exception as e:
+        return {"success": False, "error": f"Failed to open PDF document ({base}): {e}"}
     total_pages = len(doc)
 
     issues = []
@@ -125,7 +134,16 @@ def generate_print_preview_image(
     if not os.path.isfile(pdf_path):
         return None
 
-    doc = fitz.open(pdf_path)
+    base = os.path.basename(pdf_path)
+    if base.startswith("~$") or base.startswith("."):
+        return None
+
+    try:
+        if os.path.getsize(pdf_path) < 1024:
+            return None
+        doc = fitz.open(pdf_path)
+    except Exception:
+        return None
     if page_number < 1 or page_number > len(doc):
         page_number = min(len(doc), max(1, page_number))
 

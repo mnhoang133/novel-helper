@@ -723,6 +723,17 @@ class ModernNovelApp(ctk.CTk):
             if not pdf_candidates:
                 pdf_candidates = glob.glob(os.path.join(folder, "*.pdf"))
 
+        # Filter out lock files (~$), hidden files, and empty files
+        pdf_candidates = [
+            f for f in pdf_candidates
+            if os.path.isfile(f)
+            and not os.path.basename(f).startswith("~$")
+            and not os.path.basename(f).startswith(".")
+            and os.path.getsize(f) > 1024
+        ]
+        # Sort by latest modified first
+        pdf_candidates.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+
         if not pdf_candidates:
             chosen = filedialog.askopenfilename(
                 title="Select PDF file to review print safety",
