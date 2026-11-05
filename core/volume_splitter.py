@@ -73,23 +73,23 @@ def _evaluate_toc_quality(avg_ch: float, toc_cap: int) -> Tuple[int, float, str]
         toc_pages = 1
         toc_fill = round((avg_ch / float(toc_cap)) * 100.0, 1)
         if toc_fill >= 75:
-            toc_quality = f"Tối ưu khít (1 trang mục lục, lấp đầy {toc_fill:.0f}%)"
+            toc_quality = f"Optimal Fit (1-page TOC, {toc_fill:.0f}% filled)"
         else:
-            toc_quality = f"Vừa vặn (1 trang mục lục, {avg_ch:.0f}/{toc_cap} chap, lấp đầy {toc_fill:.0f}%)"
+            toc_quality = f"Good Fit (1-page TOC, {avg_ch:.0f}/{toc_cap} chapters, {toc_fill:.0f}% filled)"
     elif avg_ch <= toc_cap * 2:
         toc_pages = 2
         p2_entries = avg_ch - toc_cap
         toc_fill = round((p2_entries / float(toc_cap)) * 100.0, 1)
         if toc_fill >= 70:
-            toc_quality = f"Tối ưu khít (2 trang mục lục, trang 2 lấp đầy {toc_fill:.0f}%)"
+            toc_quality = f"Optimal Fit (2-page TOC, page 2 is {toc_fill:.0f}% filled)"
         elif toc_fill <= 25:
-            toc_quality = f"Cảnh báo tràn nhẹ (Trang 2 mục lục chỉ có {p2_entries:.0f} chương, lãng phí giấy)"
+            toc_quality = f"Slight Overflow (2-page TOC, page 2 has only {p2_entries:.0f} chapters)"
         else:
-            toc_quality = f"Ổn định (2 trang mục lục, {avg_ch:.0f}/{toc_cap * 2} chap)"
+            toc_quality = f"Balanced (2-page TOC, {avg_ch:.0f}/{toc_cap * 2} chapters)"
     else:
         toc_pages = math.ceil(avg_ch / float(toc_cap))
         toc_fill = 50.0
-        toc_quality = f"~ {toc_pages} trang mục lục ({avg_ch:.0f} chương)"
+        toc_quality = f"~ {toc_pages} TOC pages ({avg_ch:.0f} chapters)"
     return toc_pages, toc_fill, toc_quality
 
 
@@ -163,10 +163,10 @@ def analyze_optimal_volume_splits(
     opt_avg_pg_1p = round(sum(vr[3] for vr in opt_ranges_1p) / float(best_k_1p), 1)
     toc_p1, toc_f1, toc_q1 = _evaluate_toc_quality(opt_avg_ch_1p, toc_entries_per_page)
 
-    tier_label_1p = "Tier Tối ưu 1: Khít 1 trang Mục lục (Full 1 trang TOC)"
+    tier_label_1p = "Optimal Tier 1: Full 1-Page TOC (Balanced Chapters)"
     summary_1p = (
-        f"TỐI ƯU 1 TRANG MỤC LỤC: Chia đều {best_k_1p} tập (~{opt_avg_ch_1p} chương/tập, chênh lệch tối đa 1 chương).\n"
-        f"Ước tính: ~{opt_avg_pg_1p} trang/tập. Đánh giá Mục lục: {toc_q1}"
+        f"FULL 1-PAGE TOC: Divided into {best_k_1p} balanced volumes (~{opt_avg_ch_1p} ch/vol, max 1 ch difference).\n"
+        f"Estimated: ~{opt_avg_pg_1p} pages/vol. TOC Rating: {toc_q1}"
     )
 
     results[tier_label_1p] = VolumeSplitOption(
@@ -184,11 +184,11 @@ def analyze_optimal_volume_splits(
         lines_per_page=lines_per_page,
         chars_per_line=chars_per_line,
         toc_entries_per_page=toc_entries_per_page,
-        badge_text="[TỐI ƯU 1 TRANG TOC - ĐỀU CHƯƠNG]"
+        badge_text="[OPTIMAL 1-PAGE TOC - BALANCED CHAPTERS]"
     )
 
     # -------------------------------------------------------------------------
-    # 2. SPECIAL TIER 2: TỐI ƯU 2 TRANG MỤC LỤC (FULL 2-PAGE TOC - CUỐN DÀY / CHAP NGẮN)
+    # 2. SPECIAL TIER 2: FULL 2-PAGE TOC (THICK VOLUMES / SHORT CHAPS)
     # -------------------------------------------------------------------------
     if total_chapters > toc_entries_per_page:
         best_k_2p = 1
@@ -212,10 +212,10 @@ def analyze_optimal_volume_splits(
             opt_avg_pg_2p = round(sum(vr[3] for vr in opt_ranges_2p) / float(best_k_2p), 1)
             toc_p2, toc_f2, toc_q2 = _evaluate_toc_quality(opt_avg_ch_2p, toc_entries_per_page)
 
-            tier_label_2p = "Tier Tối ưu 2: Khít 2 trang Mục lục (Full 2 trang TOC - Cuốn dày / Chap ngắn)"
+            tier_label_2p = "Optimal Tier 2: Full 2-Page TOC (Thick Volumes / Short Chapters)"
             summary_2p = (
-                f"TỐI ƯU 2 TRANG MỤC LỤC: Chia đều {best_k_2p} tập (~{opt_avg_ch_2p} chương/tập, chênh lệch tối đa 1 chương).\n"
-                f"Ước tính: ~{opt_avg_pg_2p} trang/tập. Đánh giá Mục lục: {toc_q2}"
+                f"FULL 2-PAGE TOC: Divided into {best_k_2p} balanced volumes (~{opt_avg_ch_2p} ch/vol, max 1 ch difference).\n"
+                f"Estimated: ~{opt_avg_pg_2p} pages/vol. TOC Rating: {toc_q2}"
             )
 
             results[tier_label_2p] = VolumeSplitOption(
@@ -233,17 +233,17 @@ def analyze_optimal_volume_splits(
                 lines_per_page=lines_per_page,
                 chars_per_line=chars_per_line,
                 toc_entries_per_page=toc_entries_per_page,
-                badge_text="[TỐI ƯU 2 TRANG TOC - CUỐN DÀY]"
+                badge_text="[OPTIMAL 2-PAGE TOC - THICK VOLUMES]"
             )
 
     # -------------------------------------------------------------------------
     # 2. STANDARD PAGE BOUND TIERS (50-100, 100-200, 200-300, 300-400)
     # -------------------------------------------------------------------------
     standard_tiers = [
-        ("Tier 1: Tập mỏng (50 - 100 trang)", 50, 100, 75),
-        ("Tier 2: Tập chuẩn (100 - 200 trang)", 100, 200, 150),
-        ("Tier 3: Tập vừa (200 - 300 trang)", 200, 300, 250),
-        ("Tier 4: Tập dày (300 - 400 trang)", 300, 400, 350),
+        ("Tier 1: Slim Volumes (50 - 100 pages)", 50, 100, 75),
+        ("Tier 2: Standard Volumes (100 - 200 pages)", 100, 200, 150),
+        ("Tier 3: Medium Volumes (200 - 300 pages)", 200, 300, 250),
+        ("Tier 4: Thick Volumes (300 - 400 pages)", 300, 400, 350),
     ]
 
     for tier_label, min_p, max_p, ideal_p in standard_tiers:
@@ -265,8 +265,8 @@ def analyze_optimal_volume_splits(
         toc_pages, toc_fill, toc_quality = _evaluate_toc_quality(avg_ch, toc_entries_per_page)
 
         summary = (
-            f"Chia đều thành {actual_k} tập • Trung bình ~{avg_ch} chương/tập (~{avg_pg} trang/tập).\n"
-            f"Đánh giá Mục lục: {toc_quality}"
+            f"Divided evenly into {actual_k} volumes • Average ~{avg_ch} ch/vol (~{avg_pg} pages/vol).\n"
+            f"TOC Rating: {toc_quality}"
         )
 
         opt = VolumeSplitOption(

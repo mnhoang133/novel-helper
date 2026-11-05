@@ -62,7 +62,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
 
         lbl_title = ctk.CTkLabel(
             header,
-            text="Phân tích & Tối ưu Phân tập Sách in (Physical Book Analyzer)",
+            text="Physical Book Volume Analyzer & TOC Optimizer",
             font=ctk.CTkFont(family="Segoe UI", size=16, weight="bold"),
             text_color=("#0f172a", "#f8fafc")
         )
@@ -74,7 +74,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             range_frame,
-            text="Phạm vi phân tích:",
+            text="Analyze Range:",
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color=("#334155", "#cbd5e1")
         ).pack(side="left", padx=(0, 6))
@@ -82,20 +82,20 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         cur_min = self.chapters[0][0] if self.chapters else 1
         cur_max = self.chapters[-1][0] if self.chapters else 1
 
-        ctk.CTkLabel(range_frame, text="Từ Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
+        ctk.CTkLabel(range_frame, text="From Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
         self.entry_start = ctk.CTkEntry(range_frame, width=65, height=26, corner_radius=5)
         self.entry_start.insert(0, str(cur_min))
         self.entry_start.pack(side="left", padx=(0, 8))
 
-        ctk.CTkLabel(range_frame, text="Đến Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
+        ctk.CTkLabel(range_frame, text="To Ch:", font=ctk.CTkFont(family="Segoe UI", size=11), text_color=("#64748b", "#94a3b8")).pack(side="left", padx=(0, 4))
         self.entry_end = ctk.CTkEntry(range_frame, width=65, height=26, corner_radius=5)
         self.entry_end.insert(0, str(cur_max))
         self.entry_end.pack(side="left", padx=(0, 10))
 
         btn_filter = ctk.CTkButton(
             range_frame,
-            text="Cập nhật phạm vi",
-            width=125,
+            text="Update Range",
+            width=115,
             height=26,
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             fg_color=("#0284c7", "#0369a1"),
@@ -107,8 +107,8 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
 
         btn_all = ctk.CTkButton(
             range_frame,
-            text="Tất cả (1-End)",
-            width=105,
+            text="All (1-End)",
+            width=95,
             height=26,
             font=ctk.CTkFont(family="Segoe UI", size=11),
             fg_color=("#ffffff", "#1e293b"),
@@ -143,8 +143,8 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         toc_cap = calculate_toc_entries_per_page(printable_h)
 
         meta_txt = (
-            f"[Căn lề áp dụng]: Gáy {self.inside_margin_cm}cm • Mép {self.outside_margin_cm}cm • Trên/Dưới {self.top_margin_cm}/{self.bottom_margin_cm}cm • Font {self.body_font_size}pt\n"
-            f"[Sức chứa trang in]: ~{l_per_p} dòng/trang • ~{c_per_l} ký tự/dòng  |  Mục lục: ~{toc_cap} chương/trang"
+            f"[Applied Margins]: Gutter {self.inside_margin_cm}cm • Outer {self.outside_margin_cm}cm • Top/Bottom {self.top_margin_cm}/{self.bottom_margin_cm}cm • Font {self.body_font_size}pt\n"
+            f"[Page Capacity]: ~{l_per_p} lines/page • ~{c_per_l} chars/line  |  TOC Capacity: ~{toc_cap} chapters/page"
         )
         ctk.CTkLabel(
             meta_frame,
@@ -165,7 +165,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         # 3. Bottom Close Button
         btn_close = ctk.CTkButton(
             self,
-            text="Đóng",
+            text="Close",
             width=100,
             height=32,
             fg_color=("#e2e8f0", "#1e293b"),
@@ -183,7 +183,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
             widget.destroy()
 
         if not self.chapters:
-            self.lbl_desc.configure(text="Không có chương nào trong phạm vi được chọn.")
+            self.lbl_desc.configure(text="No chapters found within selected range.")
             return
 
         total_ch = len(self.chapters)
@@ -192,9 +192,9 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
 
         self.lbl_desc.configure(
             text=(
-                f"Đang phân tích {total_ch} chương (Chương {min_c} đến {max_c}). "
-                f"Các mốc phân tập được tính toán riêng biệt cho phạm vi này, "
-                f"đảm bảo các tập sách chia đều chương và tối ưu mục lục hoàn hảo."
+                f"Analyzing {total_ch} chapters (Ch {min_c} to {max_c}). "
+                f"Volume partitions are dynamically optimized for this range, "
+                f"ensuring balanced chapter distribution and optimal Table of Contents fit."
             )
         )
 
@@ -219,7 +219,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         e_val = int(e_raw) if e_raw.isdigit() else None
 
         if s_val is not None and e_val is not None and e_val < s_val:
-            messagebox.showerror("Lỗi phạm vi", f"Chương kết thúc ({e_val}) không thể nhỏ hơn chương bắt đầu ({s_val})!")
+            messagebox.showerror("Range Error", f"End Chapter ({e_val}) cannot be smaller than Start Chapter ({s_val})!")
             return
 
         filtered = [
@@ -228,7 +228,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         ]
 
         if not filtered:
-            messagebox.showwarning("Thông báo", f"Không tìm thấy chương nào trong khoảng Ch {s_val} đến Ch {e_val}.")
+            messagebox.showwarning("Notice", f"No chapters found within range Ch {s_val} to Ch {e_val}.")
             return
 
         self.chapters = filtered
@@ -249,7 +249,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
     def _render_tier_card(self, parent, opt: VolumeSplitOption):
         badge_str = getattr(opt, "badge_text", "")
         if opt.is_recommended:
-            if "2 TRANG" in badge_str:
+            if "2-PAGE" in badge_str:
                 border_col = ("#34d399", "#059669")
             else:
                 border_col = ("#38bdf8", "#0284c7")
@@ -280,7 +280,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         lbl_name.pack(side="left")
 
         if badge_str:
-            badge_color = ("#0284c7", "#0369a1") if "1 TRANG" in badge_str else ("#059669", "#047857")
+            badge_color = ("#0284c7", "#0369a1") if "1-PAGE" in badge_str else ("#059669", "#047857")
             badge = ctk.CTkLabel(
                 top_row,
                 text=f"  {badge_str}  ",
@@ -293,7 +293,7 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         elif opt.is_recommended:
             badge = ctk.CTkLabel(
                 top_row,
-                text="  [TỐI ƯU KHÍT MỤC LỤC & ĐỀU CHƯƠNG]  ",
+                text="  [OPTIMAL TOC & BALANCED CHAPTERS]  ",
                 font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
                 fg_color=("#0284c7", "#0369a1"),
                 text_color="#ffffff",
@@ -304,8 +304,8 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         # Apply Button
         btn_apply = ctk.CTkButton(
             top_row,
-            text="Áp dụng mốc này",
-            width=140,
+            text="Apply This Tier",
+            width=130,
             height=32,
             font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             fg_color=("#18181b", "#f8fafc"),
@@ -319,9 +319,9 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         stats_row = ctk.CTkFrame(card, fg_color="transparent")
         stats_row.pack(fill="x", padx=16, pady=4)
 
-        stat_1 = f"• Tổng: {opt.num_volumes} tập"
-        stat_2 = f"• Bình quân: ~{opt.avg_chapters_per_vol} chương/tập"
-        stat_3 = f"• Ước tính: ~{opt.avg_pages_per_vol} trang/tập"
+        stat_1 = f"• Total: {opt.num_volumes} volumes"
+        stat_2 = f"• Average: ~{opt.avg_chapters_per_vol} ch/vol"
+        stat_3 = f"• Estimated: ~{opt.avg_pages_per_vol} pages/vol"
 
         ctk.CTkLabel(
             stats_row,
@@ -331,10 +331,10 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         ).pack(anchor="w")
 
         # TOC Evaluation Row
-        toc_color = ("#15803d", "#4ade80") if ("Khít" in opt.toc_quality_rating or "Vừa vặn" in opt.toc_quality_rating) else ("#b45309", "#fbbf24")
+        toc_color = ("#15803d", "#4ade80") if ("Optimal" in opt.toc_quality_rating or "Good" in opt.toc_quality_rating or "Balanced" in opt.toc_quality_rating) else ("#b45309", "#fbbf24")
         ctk.CTkLabel(
             card,
-            text=f"Mục lục (TOC): {opt.toc_quality_rating}",
+            text=f"Table of Contents (TOC): {opt.toc_quality_rating}",
             font=ctk.CTkFont(family="Segoe UI", size=11),
             text_color=toc_color
         ).pack(anchor="w", padx=16, pady=(2, 4))
@@ -342,13 +342,13 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         # Preview of volume ranges
         preview_parts = []
         for vr in opt.volume_ranges[:6]:
-            preview_parts.append(f"Tập {vr[0]}: Ch {vr[1]}-{vr[2]} (~{vr[3]:.0f}p)")
+            preview_parts.append(f"Vol {vr[0]}: Ch {vr[1]}-{vr[2]} (~{vr[3]:.0f}p)")
         if len(opt.volume_ranges) > 6:
-            preview_parts.append(f"... +{len(opt.volume_ranges) - 6} tập nữa")
+            preview_parts.append(f"... +{len(opt.volume_ranges) - 6} more vols")
 
         ctk.CTkLabel(
             card,
-            text="Chi tiết phân bổ: " + "   •   ".join(preview_parts),
+            text="Volume breakdown: " + "   •   ".join(preview_parts),
             font=ctk.CTkFont(family="Consolas", size=10),
             text_color=("#64748b", "#94a3b8")
         ).pack(anchor="w", padx=16, pady=(0, 12))

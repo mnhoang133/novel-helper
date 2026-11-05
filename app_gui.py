@@ -678,17 +678,17 @@ class ModernNovelApp(ctk.CTk):
 
         is_mirror = self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True
         is_safe = (foot >= 0.6) and (bot >= 1.2) and (bot >= round(foot + 0.4, 1))
-        status_suffix = " | [An toan in an: HOP LE]" if is_safe else f" | [CANH BAO: Bot < {max(1.2, foot + 0.5):.1f}cm de bi mat chu / chen footer]"
+        status_suffix = " | [Print Safety: SAFE]" if is_safe else f" | [WARNING: Bottom < {max(1.2, foot + 0.5):.1f}cm risk of text clipping / footer collision]"
         status_color = ("#0284c7", "#38bdf8") if is_safe else ("#d97706", "#f59e0b")
 
         if is_mirror:
             self.lbl_margin_preview.configure(
-                text=f"[Le doi xung in 2 mat] Trang le: Trai (Gay) 1.2cm, Phai (Mep) {outside}cm  |  Trang chan: Trai (Mep) {inside}cm, Phai (Gay) 1.2cm{status_suffix}",
+                text=f"[Mirror Margins] Odd: Left (Gutter) 1.2cm, Right (Outer) {outside}cm | Even: Left (Outer) {inside}cm, Right (Gutter) 1.2cm{status_suffix}",
                 text_color=status_color
             )
         else:
             self.lbl_margin_preview.configure(
-                text=f"[Le thuong] Trai: {inside}cm | Phai: {outside}cm | Tren: {top}cm | Duoi: {bot}cm | Footer: {foot}cm{status_suffix}",
+                text=f"[Standard Margins] Left: {inside}cm | Right: {outside}cm | Top: {top}cm | Bottom: {bot}cm | Footer: {foot}cm{status_suffix}",
                 text_color=status_color
             )
 
@@ -725,15 +725,15 @@ class ModernNovelApp(ctk.CTk):
 
         if not pdf_candidates:
             chosen = filedialog.askopenfilename(
-                title="Chon file PDF de xem truoc trang in va kiem tra an toan",
+                title="Select PDF file to review print safety",
                 filetypes=[("PDF Document", "*.pdf")]
             )
             if chosen and os.path.isfile(chosen):
                 pdf_candidates = [chosen]
             else:
                 messagebox.showinfo(
-                    "Xem truoc trang in",
-                    "Chua tim thay file PDF nao duoc xuat ban!\n\nVui long bam 'Start Publishing Book' de xuat sach hoac chon mot file PDF da co."
+                    "Print Preview",
+                    "No published PDF files found.\n\nPlease click 'GENERATE PRINT-READY BOOK' to export first, or select an existing PDF."
                 )
                 return
 
@@ -742,39 +742,39 @@ class ModernNovelApp(ctk.CTk):
 
         audit = audit_pdf_print_safety(target_pdf)
         if not audit.get("success"):
-            messagebox.showerror("Loi kiem tra", f"Khong the kiem tra file PDF: {audit.get('error')}")
+            messagebox.showerror("Audit Error", f"Unable to audit PDF: {audit.get('error')}")
             return
 
         prev_page = 2 if audit.get("total_pages", 1) >= 2 else 1
         preview_png = generate_print_preview_image(target_pdf, page_number=prev_page, draw_guides=True)
 
-        status_text = "HOP LE VA AN TOAN TUYET DOI" if audit.get("is_safe") else "CO NGUY CO BI MAT CHU HOAC DINH SO TRANG"
+        status_text = "PASSED - 100% PRINT SAFE" if audit.get("is_safe") else "WARNING: POTENTIAL CLIPPING OR FOOTER COLLISION"
         msg = (
-            f"KET QUA KIEM TRA TRANG IN:\n"
-            f"* Trang thai: {status_text}\n"
-            f"* File kiem tra: {os.path.basename(target_pdf)}\n"
-            f"* Tong so trang: {audit.get('total_pages')}\n"
-            f"* Khoang cach mep duoi nho nhat: {audit.get('min_dist_bottom_cm')}cm (Nguong may in: 0.50cm)\n"
-            f"* Khoang cach mep tren: {audit.get('min_dist_top_cm')}cm | Trai: {audit.get('min_dist_left_cm')}cm | Phai: {audit.get('min_dist_right_cm')}cm\n"
+            f"PDF PRINT SAFETY AUDIT REPORT:\n"
+            f"* Status: {status_text}\n"
+            f"* Target File: {os.path.basename(target_pdf)}\n"
+            f"* Total Pages: {audit.get('total_pages')}\n"
+            f"* Min Bottom Clearance: {audit.get('min_dist_bottom_cm')}cm (Printer roller limit: 0.50cm)\n"
+            f"* Min Top Clearance: {audit.get('min_dist_top_cm')}cm | Left: {audit.get('min_dist_left_cm')}cm | Right: {audit.get('min_dist_right_cm')}cm\n"
         )
         if audit.get("min_footer_gap_pt") is not None:
-            msg += f"* Khoang cach noi dung den so trang (Footer gap): {audit.get('min_footer_gap_pt')}pt\n"
+            msg += f"* Body Text to Footer Gap: {audit.get('min_footer_gap_pt')}pt\n"
 
         if audit.get("issues"):
-            msg += f"\nCanh bao phat hien:\n" + "\n".join(audit.get("issues")[:3])
+            msg += f"\nDetected Warnings:\n" + "\n".join(audit.get("issues")[:3])
             self.log_message(f"Print Safety Audit Warning: {len(audit.get('clipped_pages', []))} page(s) flagged", "warning")
         else:
-            msg += f"\nHoan hao! Khong co chu nao bi cat va khong co trang trang phat sinh."
+            msg += f"\nPerfect! All text blocks safely cleared printer boundaries. Zero clipping detected."
             self.log_message("Print Safety Audit: PASSED (All text blocks cleared printer margins).", "success")
 
         if preview_png and os.path.isfile(preview_png):
             try:
                 os.startfile(preview_png)
-                msg += f"\n\nDa mo hinh anh xem truoc trang in kem duong vien do canh bao (0.5cm)."
+                msg += f"\n\nHigh-fidelity preview image with red printer boundary (0.5cm) has been opened."
             except Exception:
                 pass
 
-        messagebox.showinfo("Bao cao kiem tra an toan trang in", msg)
+        messagebox.showinfo("Print Safety Audit Report", msg)
 
     def _open_smart_analyzer_modal(self):
         """Opens the Smart Volume Analyzer & TOC Optimizer Dialog adapted to user margins and chapter range."""
@@ -840,11 +840,11 @@ class ModernNovelApp(ctk.CTk):
                 "success"
             )
             messagebox.showinfo(
-                "Đã áp dụng mốc phân tập",
-                f"Đã chọn: {opt.tier_name}\n\n"
-                f"• Phân chia thành: {opt.num_volumes} tập cân bằng\n"
-                f"• Ước tính: ~{opt.avg_pages_per_vol} trang/tập (~{opt.avg_chapters_per_vol} chương/tập)\n"
-                f"• Mục lục: {opt.toc_quality_rating}"
+                "Tier Applied",
+                f"Selected: {opt.tier_name}\n\n"
+                f"* Partitioned into: {opt.num_volumes} balanced volumes\n"
+                f"* Estimated: ~{opt.avg_pages_per_vol} pages/vol (~{opt.avg_chapters_per_vol} ch/vol)\n"
+                f"* Table of Contents: {opt.toc_quality_rating}"
             )
 
         def on_range_sync(new_start: int, new_end: int):

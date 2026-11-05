@@ -207,25 +207,25 @@ def build_publisher_tab(parent, app):
     ctk.CTkLabel(rt1, text="Reading Font:", width=85, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.combo_font = ctk.CTkComboBox(
         rt1, values=[
-            "Georgia - To, ro rang, de doc",
-            "Palatino Linotype - Thanh lich, can doi",
-            "Garamond - Co dien, tiet kiem trang",
-            "Times New Roman - Tieu chuan, gon gang",
-            "Book Antiqua - Co dien truyen thong",
-            "Cambria - Serif hien dai, chac chan",
-            "Constantia - Trang nha cho van hoc",
-            "Sitka Text - Toi uu do doc in an",
-            "Calibri - Khong chan hien dai",
-            "Verdana - Chu rong, rat de doc",
-            "Arial - Khong chan tieu chuan",
-            "Bookman Old Style - Dam net, chu to"
+            "Georgia - Large, clear, readable",
+            "Palatino Linotype - Elegant, balanced",
+            "Garamond - Classic, page-saving",
+            "Times New Roman - Standard, compact",
+            "Book Antiqua - Traditional classic",
+            "Cambria - Modern serif, robust",
+            "Constantia - Refined literary",
+            "Sitka Text - Optimized for print reading",
+            "Calibri - Modern sans-serif",
+            "Verdana - Wide characters, easy to read",
+            "Arial - Clean standard sans-serif",
+            "Bookman Old Style - Bold, prominent"
         ],
         corner_radius=6, border_color=("#cbd5e1", "#334155"), fg_color=("#ffffff", "#0f172a"),
         text_color=("#0f172a", "#f8fafc"), button_color=("#e2e8f0", "#1e293b"),
         dropdown_fg_color=("#ffffff", "#1e293b"), dropdown_text_color=("#0f172a", "#f8fafc"),
         width=215, height=28
     )
-    app.combo_font.set("Georgia - To, ro rang, de doc")
+    app.combo_font.set("Georgia - Large, clear, readable")
     app.combo_font.pack(side="left", padx=(0, 10))
 
     ctk.CTkLabel(rt1, text="Body Size:", width=65, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
@@ -265,47 +265,47 @@ def build_publisher_tab(parent, app):
     )
     app.chk_smart.pack(side="left")
 
-    # Row 2 (New): Line Spacing & Paragraph Spacing Controls
+    # Row 2: Line Spacing & Paragraph Spacing Controls
     rt2 = ctk.CTkFrame(card_typo, fg_color="transparent")
     rt2.pack(fill="x", expand=True, padx=12, pady=(1, 4))
 
-    ctk.CTkLabel(rt2, text="Gian dong (Line):", width=105, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    ctk.CTkLabel(rt2, text="Line Spacing:", width=95, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.combo_line_spacing = ctk.CTkComboBox(
         rt2, values=[
-            "1.15 - Chat che (Tiet kiem nhat)",
-            "1.20 - Can doi (Tiet kiem giay)",
-            "1.25 - Tieu chuan xuat ban",
-            "1.30 - Thoang dang (De doc)",
-            "1.35 - Rong rai"
+            "1.15 - Compact (Max paper saving)",
+            "1.20 - Balanced (Optimal book layout)",
+            "1.25 - Standard publishing",
+            "1.30 - Spacious (Comfortable reading)",
+            "1.35 - Wide spacing"
         ],
         corner_radius=6, border_color=("#cbd5e1", "#334155"), fg_color=("#ffffff", "#0f172a"),
         text_color=("#0f172a", "#f8fafc"), button_color=("#e2e8f0", "#1e293b"),
         dropdown_fg_color=("#ffffff", "#1e293b"), dropdown_text_color=("#0f172a", "#f8fafc"),
         width=195, height=28
     )
-    app.combo_line_spacing.set("1.20 - Can doi (Tiet kiem giay)")
+    app.combo_line_spacing.set("1.20 - Balanced (Optimal book layout)")
     app.combo_line_spacing.pack(side="left", padx=(0, 12))
 
-    ctk.CTkLabel(rt2, text="Cach doan (Space):", width=110, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    ctk.CTkLabel(rt2, text="Para Spacing:", width=90, anchor="w", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.combo_para_spacing = ctk.CTkComboBox(
         rt2, values=[
-            "3 pt - Tiet kiem toi da",
-            "4 pt - Gon gang tieu thuyet",
-            "5 pt - Can doi hai hoa",
-            "7 pt - Thoang tieu chuan",
-            "9 pt - Rong rai"
+            "3 pt - Maximum saving",
+            "4 pt - Compact novel standard",
+            "5 pt - Balanced & harmonious",
+            "7 pt - Standard spacious",
+            "9 pt - Wide separation"
         ],
         corner_radius=6, border_color=("#cbd5e1", "#334155"), fg_color=("#ffffff", "#0f172a"),
         text_color=("#0f172a", "#f8fafc"), button_color=("#e2e8f0", "#1e293b"),
         dropdown_fg_color=("#ffffff", "#1e293b"), dropdown_text_color=("#0f172a", "#f8fafc"),
         width=180, height=28
     )
-    app.combo_para_spacing.set("4 pt - Gon gang tieu thuyet")
+    app.combo_para_spacing.set("4 pt - Compact novel standard")
     app.combo_para_spacing.pack(side="left", padx=(0, 12))
 
     lbl_spacing_hint = ctk.CTkLabel(
         rt2,
-        text="[Meo tiet kiem] Garamond/Times + Gian dong 1.20 + 4pt giup giam 15-20% so trang in",
+        text="[Paper Saving Tip] Garamond/Times + Line Spacing 1.20 + 4pt saves 15-20% total pages",
         font=ctk.CTkFont(family="Segoe UI", size=10),
         text_color=("#059669", "#34d399")
     )
@@ -325,7 +325,7 @@ def build_publisher_tab(parent, app):
 
     ctk.CTkLabel(
         card_margins,
-        text="4. Page Margins & Book Binding (Can le dong gay sach & Khoang an toan in an)",
+        text="4. Page Margins & Book Binding (Gutter Margins & Safe Print Clearance)",
         font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
         text_color=("#0f172a", "#f8fafc")
     ).pack(anchor="w", padx=12, pady=(4, 1))
@@ -337,7 +337,7 @@ def build_publisher_tab(parent, app):
     app.var_mirror_margins = ctk.BooleanVar(value=True)
     app.chk_mirror = ctk.CTkCheckBox(
         rm1,
-        text="Le doi xung in sach 2 mat (Mirror Margins: Tu doi Gay sach trai o trang le, phai o trang chan)",
+        text="Mirror Margins (Alternating gutter: inside left on odd pages, inside right on even pages)",
         variable=app.var_mirror_margins, corner_radius=4,
         font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
         text_color=("#0f172a", "#f8fafc"), fg_color=("#18181b", "#f8fafc"),
@@ -350,8 +350,8 @@ def build_publisher_tab(parent, app):
     rm2 = ctk.CTkFrame(card_margins, fg_color="transparent")
     rm2.pack(fill="x", expand=True, padx=12, pady=(1, 2))
 
-    # Inside (Gay dan)
-    ctk.CTkLabel(rm2, text="Gay dan (Inside):", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    # Inside (Gutter)
+    ctk.CTkLabel(rm2, text="Inside (Gutter):", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.entry_margin_inside = ctk.CTkEntry(
         rm2, corner_radius=6, border_color=("#cbd5e1", "#334155"),
         fg_color=("#ffffff", "#0f172a"), text_color=("#0f172a", "#f8fafc"), width=42, height=28
@@ -360,8 +360,8 @@ def build_publisher_tab(parent, app):
     app.entry_margin_inside.pack(side="left", padx=(3, 8))
     app.entry_margin_inside.bind("<KeyRelease>", lambda e: app._on_margin_changed())
 
-    # Outside (Mep ngoai)
-    ctk.CTkLabel(rm2, text="Mep ngoai (Out):", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    # Outside (Outer margin)
+    ctk.CTkLabel(rm2, text="Outside:", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.entry_margin_outside = ctk.CTkEntry(
         rm2, corner_radius=6, border_color=("#cbd5e1", "#334155"),
         fg_color=("#ffffff", "#0f172a"), text_color=("#0f172a", "#f8fafc"), width=42, height=28
@@ -371,7 +371,7 @@ def build_publisher_tab(parent, app):
     app.entry_margin_outside.bind("<KeyRelease>", lambda e: app._on_margin_changed())
 
     # Top
-    ctk.CTkLabel(rm2, text="Tren (Top):", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    ctk.CTkLabel(rm2, text="Top:", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.entry_margin_top = ctk.CTkEntry(
         rm2, corner_radius=6, border_color=("#cbd5e1", "#334155"),
         fg_color=("#ffffff", "#0f172a"), text_color=("#0f172a", "#f8fafc"), width=42, height=28
@@ -380,8 +380,8 @@ def build_publisher_tab(parent, app):
     app.entry_margin_top.pack(side="left", padx=(3, 8))
     app.entry_margin_top.bind("<KeyRelease>", lambda e: app._on_margin_changed())
 
-    # Bottom (Khoa nguong an toan >= 1.2cm)
-    ctk.CTkLabel(rm2, text="Duoi (Bot):", text_color=("#334155", "#cbd5e1")).pack(side="left")
+    # Bottom (Safe threshold >= 1.2cm)
+    ctk.CTkLabel(rm2, text="Bottom:", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.entry_margin_bottom = ctk.CTkEntry(
         rm2, corner_radius=6, border_color=("#cbd5e1", "#334155"),
         fg_color=("#ffffff", "#0f172a"), text_color=("#0f172a", "#f8fafc"), width=42, height=28
@@ -391,7 +391,7 @@ def build_publisher_tab(parent, app):
     app.entry_margin_bottom.bind("<KeyRelease>", lambda e: app._on_margin_changed())
     app.entry_margin_bottom.bind("<FocusOut>", lambda e: app._clamp_margin_bottom())
 
-    # Footer (Khoa nguong an toan >= 0.6cm)
+    # Footer (Safe threshold >= 0.6cm)
     ctk.CTkLabel(rm2, text="Footer:", text_color=("#334155", "#cbd5e1")).pack(side="left")
     app.entry_footer_dist = ctk.CTkEntry(
         rm2, corner_radius=6, border_color=("#cbd5e1", "#334155"),
@@ -403,7 +403,7 @@ def build_publisher_tab(parent, app):
     app.entry_footer_dist.bind("<FocusOut>", lambda e: app._clamp_margin_footer())
 
     btn_reset_margins = ctk.CTkButton(
-        rm2, text="Reset le chuan", corner_radius=6, height=28, width=95,
+        rm2, text="Reset Defaults", corner_radius=6, height=28, width=95,
         fg_color=("#ffffff", "#1e293b"), text_color=("#0f172a", "#f8fafc"),
         hover_color=("#f1f5f9", "#334155"), border_width=1, border_color=("#cbd5e1", "#475569"),
         command=app._reset_default_margins
@@ -411,7 +411,7 @@ def build_publisher_tab(parent, app):
     btn_reset_margins.pack(side="left", padx=(0, 6))
 
     btn_preview_margins = ctk.CTkButton(
-        rm2, text="Xem truoc trang in", corner_radius=6, height=28, width=115,
+        rm2, text="Print Preview", corner_radius=6, height=28, width=105,
         fg_color=("#0284c7", "#0369a1"), text_color="#ffffff",
         hover_color=("#0369a1", "#0284c7"),
         command=app._open_print_preview
@@ -421,7 +421,7 @@ def build_publisher_tab(parent, app):
     # Row 3: Dynamic Live Margin Explanation / Preview
     app.lbl_margin_preview = ctk.CTkLabel(
         card_margins,
-        text="[Le doi xung in 2 mat] Trang le: Trai (Gay) 1.2cm, Phai (Mep) 0.6cm  |  Trang chan: Trai (Mep) 0.6cm, Phai (Gay) 1.2cm  |  [An toan in an] Duoi >= 1.2cm, Footer >= 0.6cm",
+        text="[Mirror Margins] Odd: Left (Gutter) 1.2cm, Right (Outer) 0.6cm | Even: Left (Outer) 0.6cm, Right (Gutter) 1.2cm | [Print Safety] Bottom >= 1.2cm, Footer >= 0.6cm",
         font=ctk.CTkFont(family="Segoe UI", size=10, weight="bold"),
         text_color=("#0284c7", "#38bdf8")
     )
@@ -470,7 +470,7 @@ def build_publisher_tab(parent, app):
     # Smart Analyzer Button
     btn_smart_analyzer = ctk.CTkButton(
         rv1,
-        text="Phân tích & Tối ưu số trang",
+        text="Analyze & Optimize Pages",
         font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
         corner_radius=6,
         height=28,
@@ -506,7 +506,7 @@ def build_publisher_tab(parent, app):
 
     app.lbl_toc_hint = ctk.CTkLabel(
         rv2,
-        text="TOC Fit: 1 trang mục lục khít nhất khi mỗi tập có ≤ 32 chương; 2 trang khi ≤ 64 chương.",
+        text="TOC Fit: 1-page TOC fits <= 32 chapters/vol; 2-page TOC fits <= 64 chapters/vol.",
         font=ctk.CTkFont(family="Segoe UI", size=10),
         text_color=("#64748b", "#94a3b8")
     )

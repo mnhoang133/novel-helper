@@ -38,25 +38,25 @@ DEFAULT_CONFIG = {
     "book_author": "Web Novel Author",
     "book_subtitle": "Official English Translation",
     "book_imprint": "Print Edition • 2026",
-    "reading_font": "Georgia - To, ro rang, de doc",
+    "reading_font": "Georgia - Large, clear, readable",
     "body_font_size": 12,
     "chapter_font_size": 28,
     "align_mode": "Justify",
     "smart_pagination": True,
-    "line_spacing": "1.20",
-    "para_spacing": "5.0 pt",
+    "line_spacing": "1.20 - Balanced (Optimal book layout)",
+    "para_spacing": "4 pt - Compact novel standard",
     "split_mode": "split",
     "target_pages": 250,
     "export_format": "Both DOCX and PDF",
     # Page Margins & Book Binding
-    "inside_margin_cm": 1.2,      # Gay sach / Inside
-    "outside_margin_cm": 0.6,     # Mep ngoai / Outside
+    "inside_margin_cm": 1.2,      # Gutter margin / Inside
+    "outside_margin_cm": 0.6,     # Outer margin / Outside
     "top_margin_cm": 0.6,
     "bottom_margin_cm": 1.2,
     "footer_distance_cm": 0.6,
     "header_distance_cm": 0.6,
-    "mirror_margins": True,       # Le doi xung trang chan / le
-    "theme_mode": "Dark"          # Giao dien Dark / Light theo so thich nguoi dung
+    "mirror_margins": True,       # Mirror Margins (Odd/Even alternating gutter)
+    "theme_mode": "Dark"          # UI theme mode: Dark / Light
 }
 
 
