@@ -294,7 +294,9 @@ def split_chapters_into_volumes(
     chapters: List[Tuple[int, str, str]],
     target_pages_per_volume: int = 250,
     lines_per_page: float = LINES_PER_PAGE_STANDARD,
-    chars_per_line: int = CHARS_PER_LINE_STANDARD
+    chars_per_line: int = CHARS_PER_LINE_STANDARD,
+    space_after_pt: float = 5.0,
+    **kwargs
 ) -> List[Tuple[int, str, List[Tuple[int, str, str]]]]:
     """
     Splits chapter list into balanced book volumes based on target page count.
@@ -305,7 +307,7 @@ def split_chapters_into_volumes(
 
     total_chapters = len(chapters)
     total_body_lines = sum(
-        calculate_chapter_real_lines(ch[2], chars_per_line=chars_per_line)
+        calculate_chapter_real_lines(ch[2], chars_per_line=chars_per_line, space_after_pt=space_after_pt)
         for ch in chapters
     )
     total_pages = (total_body_lines / lines_per_page) + 2.0  # +2 cover + TOC
@@ -322,7 +324,7 @@ def split_chapters_into_volumes(
         vol_chapters = chapters[curr_idx : curr_idx + count]
         start_ch = vol_chapters[0][0]
         end_ch = vol_chapters[-1][0]
-        vol_title = f"Volume {v_idx:02d} (Chapters {start_ch}–{end_ch})"
+        vol_title = f"Volume {v_idx:02d} (Chapters {start_ch} to {end_ch})"
         volumes.append((v_idx, vol_title, vol_chapters))
         curr_idx += count
 
