@@ -32,7 +32,9 @@ from core.book_engine import (
     calculate_lines_per_page,
     calculate_chars_per_line,
     calculate_toc_entries_per_page,
-    generate_export_diagnostics
+    generate_export_diagnostics,
+    audit_pdf_print_safety,
+    generate_print_preview_image
 )
 from core.session_manager import (
     APP_DIR,
@@ -623,6 +625,39 @@ class ModernNovelApp(ctk.CTk):
             self.entry_pub_end_ch.insert(0, str(info["max_chapter"]))
             self.log_message(f"Reset publish range to all available chapters: Ch {info['min_chapter']} to Ch {info['max_chapter']}", "info")
 
+    def _clamp_margin_bottom(self):
+        """Enforces Layer 1 UI safe physical bottom margin threshold to prevent text clipping and footer collision."""
+        if not hasattr(self, 'entry_margin_bottom'):
+            return
+        try:
+            bot_val = float(self.entry_margin_bottom.get().strip() or 1.2)
+            foot_val = float(self.entry_footer_dist.get().strip() or 0.6) if hasattr(self, 'entry_footer_dist') else 0.6
+        except ValueError:
+            return
+
+        min_safe_bot = max(1.2, round(foot_val + 0.5, 1))
+        if bot_val < min_safe_bot:
+            self.entry_margin_bottom.delete(0, "end")
+            self.entry_margin_bottom.insert(0, f"{min_safe_bot:.1f}")
+            self.log_message(f"Auto-clamped Bottom margin to {min_safe_bot:.1f}cm (Layer 1 safety threshold to prevent text clipping).", "info")
+        self._on_margin_changed()
+
+    def _clamp_margin_footer(self):
+        """Enforces Layer 1 UI safe footer distance threshold (>= 0.6cm) to avoid printer feed roller border."""
+        if not hasattr(self, 'entry_footer_dist'):
+            return
+        try:
+            foot_val = float(self.entry_footer_dist.get().strip() or 0.6)
+        except ValueError:
+            return
+
+        min_safe_foot = 0.6
+        if foot_val < min_safe_foot:
+            self.entry_footer_dist.delete(0, "end")
+            self.entry_footer_dist.insert(0, f"{min_safe_foot:.1f}")
+            self.log_message(f"Auto-clamped Footer distance to {min_safe_foot:.1f}cm (Laser printers require >= 0.5cm hardware clearance).", "info")
+        self._clamp_margin_bottom()
+
     def _on_margin_changed(self):
         """Updates dynamic live preview of odd/even margin placement without overwriting user input."""
         if not hasattr(self, 'lbl_margin_preview') or not hasattr(self, 'entry_margin_inside'):
@@ -632,40 +667,114 @@ class ModernNovelApp(ctk.CTk):
             outside_txt = self.entry_margin_outside.get().strip()
             top_txt = self.entry_margin_top.get().strip()
             bot_txt = self.entry_margin_bottom.get().strip()
-            inside = float(inside_txt or 2.0)
-            outside = float(outside_txt or 1.2)
-            top = float(top_txt or 1.2)
+            foot_txt = self.entry_footer_dist.get().strip() if hasattr(self, 'entry_footer_dist') else "0.6"
+            inside = float(inside_txt or 1.2)
+            outside = float(outside_txt or 0.6)
+            top = float(top_txt or 0.6)
             bot = float(bot_txt or 1.2)
+            foot = float(foot_txt or 0.6)
         except ValueError:
             return
 
         is_mirror = self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True
+        is_safe = (foot >= 0.6) and (bot >= 1.2) and (bot >= round(foot + 0.4, 1))
+        status_suffix = " | [An toan in an: HOP LE]" if is_safe else f" | [CANH BAO: Bot < {max(1.2, foot + 0.5):.1f}cm de bi mat chu / chen footer]"
+        status_color = ("#0284c7", "#38bdf8") if is_safe else ("#d97706", "#f59e0b")
+
         if is_mirror:
             self.lbl_margin_preview.configure(
-                text=f"[Lề đối xứng in 2 mặt] Trang lẻ: Trái (Gáy) 1.2cm, Phải (Mép) {outside}cm  |  Trang chẵn: Trái (Mép) {inside}cm, Phải (Gáy) 1.2cm",
-                text_color=("#0284c7", "#38bdf8")
+                text=f"[Le doi xung in 2 mat] Trang le: Trai (Gay) 1.2cm, Phai (Mep) {outside}cm  |  Trang chan: Trai (Mep) {inside}cm, Phai (Gay) 1.2cm{status_suffix}",
+                text_color=status_color
             )
         else:
             self.lbl_margin_preview.configure(
-                text=f"[Lề thường] Trái: {inside}cm | Phải: {outside}cm | Trên: {top}cm | Dưới: {bot}cm",
-                text_color=("#64748b", "#94a3b8")
+                text=f"[Le thuong] Trai: {inside}cm | Phai: {outside}cm | Tren: {top}cm | Duoi: {bot}cm | Footer: {foot}cm{status_suffix}",
+                text_color=status_color
             )
 
     def _reset_default_margins(self):
         """Resets margin entries to physical book printing standard."""
         self.entry_margin_inside.delete(0, "end")
-        self.entry_margin_inside.insert(0, "2.0")
+        self.entry_margin_inside.insert(0, "1.2")
         self.entry_margin_outside.delete(0, "end")
-        self.entry_margin_outside.insert(0, "1.2")
+        self.entry_margin_outside.insert(0, "0.6")
         self.entry_margin_top.delete(0, "end")
-        self.entry_margin_top.insert(0, "1.2")
+        self.entry_margin_top.insert(0, "0.6")
         self.entry_margin_bottom.delete(0, "end")
         self.entry_margin_bottom.insert(0, "1.2")
         self.entry_footer_dist.delete(0, "end")
-        self.entry_footer_dist.insert(0, "0.7")
+        self.entry_footer_dist.insert(0, "0.6")
         self.var_mirror_margins.set(True)
         self._on_margin_changed()
-        self.log_message("Reset margins to standard: Inside 2.0cm, Outside 1.2cm, Top/Bottom 1.2cm, Mirror Margins ON.", "info")
+        self.log_message("Reset margins to standard: Inside 1.2cm, Outside 0.6cm, Top 0.6cm, Bottom 1.2cm, Footer 0.6cm, Mirror Margins ON.", "info")
+
+    def _open_print_preview(self):
+        """Audits PDF print safety and opens high-fidelity preview with physical printer margin overlays."""
+        folder = self.entry_pub_src_dir.get().strip() if hasattr(self, 'entry_pub_src_dir') else ""
+        pdf_candidates = []
+
+        if hasattr(self, 'exported_files') and self.exported_files:
+            pdf_candidates = [f for f in self.exported_files if f.lower().endswith(".pdf") and os.path.isfile(f)]
+
+        if not pdf_candidates and os.path.isdir(folder):
+            pdf_dir = os.path.join(folder, "print", "pdf")
+            if os.path.isdir(pdf_dir):
+                pdf_candidates = glob.glob(os.path.join(pdf_dir, "*.pdf"))
+            if not pdf_candidates:
+                pdf_candidates = glob.glob(os.path.join(folder, "*.pdf"))
+
+        if not pdf_candidates:
+            chosen = filedialog.askopenfilename(
+                title="Chon file PDF de xem truoc trang in va kiem tra an toan",
+                filetypes=[("PDF Document", "*.pdf")]
+            )
+            if chosen and os.path.isfile(chosen):
+                pdf_candidates = [chosen]
+            else:
+                messagebox.showinfo(
+                    "Xem truoc trang in",
+                    "Chua tim thay file PDF nao duoc xuat ban!\n\nVui long bam 'Start Publishing Book' de xuat sach hoac chon mot file PDF da co."
+                )
+                return
+
+        target_pdf = pdf_candidates[0]
+        self.log_message(f"Auditing print safety for: {os.path.basename(target_pdf)}...", "info")
+
+        audit = audit_pdf_print_safety(target_pdf)
+        if not audit.get("success"):
+            messagebox.showerror("Loi kiem tra", f"Khong the kiem tra file PDF: {audit.get('error')}")
+            return
+
+        prev_page = 2 if audit.get("total_pages", 1) >= 2 else 1
+        preview_png = generate_print_preview_image(target_pdf, page_number=prev_page, draw_guides=True)
+
+        status_text = "HOP LE VA AN TOAN TUYET DOI" if audit.get("is_safe") else "CO NGUY CO BI MAT CHU HOAC DINH SO TRANG"
+        msg = (
+            f"KET QUA KIEM TRA TRANG IN:\n"
+            f"* Trang thai: {status_text}\n"
+            f"* File kiem tra: {os.path.basename(target_pdf)}\n"
+            f"* Tong so trang: {audit.get('total_pages')}\n"
+            f"* Khoang cach mep duoi nho nhat: {audit.get('min_dist_bottom_cm')}cm (Nguong may in: 0.50cm)\n"
+            f"* Khoang cach mep tren: {audit.get('min_dist_top_cm')}cm | Trai: {audit.get('min_dist_left_cm')}cm | Phai: {audit.get('min_dist_right_cm')}cm\n"
+        )
+        if audit.get("min_footer_gap_pt") is not None:
+            msg += f"* Khoang cach noi dung den so trang (Footer gap): {audit.get('min_footer_gap_pt')}pt\n"
+
+        if audit.get("issues"):
+            msg += f"\nCanh bao phat hien:\n" + "\n".join(audit.get("issues")[:3])
+            self.log_message(f"Print Safety Audit Warning: {len(audit.get('clipped_pages', []))} page(s) flagged", "warning")
+        else:
+            msg += f"\nHoan hao! Khong co chu nao bi cat va khong co trang trang phat sinh."
+            self.log_message("Print Safety Audit: PASSED (All text blocks cleared printer margins).", "success")
+
+        if preview_png and os.path.isfile(preview_png):
+            try:
+                os.startfile(preview_png)
+                msg += f"\n\nDa mo hinh anh xem truoc trang in kem duong vien do canh bao (0.5cm)."
+            except Exception:
+                pass
+
+        messagebox.showinfo("Bao cao kiem tra an toan trang in", msg)
 
     def _open_smart_analyzer_modal(self):
         """Opens the Smart Volume Analyzer & TOC Optimizer Dialog adapted to user margins and chapter range."""
@@ -701,13 +810,26 @@ class ModernNovelApp(ctk.CTk):
             return
 
         try:
-            inside_m = float(self.entry_margin_inside.get().strip() or 2.0)
-            outside_m = float(self.entry_margin_outside.get().strip() or 1.2)
-            top_m = float(self.entry_margin_top.get().strip() or 1.2)
+            inside_m = float(self.entry_margin_inside.get().strip() or 1.2)
+            outside_m = float(self.entry_margin_outside.get().strip() or 0.6)
+            top_m = float(self.entry_margin_top.get().strip() or 0.6)
             bot_m = float(self.entry_margin_bottom.get().strip() or 1.2)
-            body_size = int(self.entry_body_size.get().strip() or 14)
+            body_size = int(self.entry_body_size.get().strip() or 12)
         except Exception:
-            inside_m, outside_m, top_m, bot_m, body_size = 2.0, 1.2, 1.2, 1.2, 14
+            inside_m, outside_m, top_m, bot_m, body_size = 1.2, 0.6, 0.6, 1.2, 12
+
+        # Extract line spacing & paragraph spacing
+        line_spacing_raw = self.combo_line_spacing.get() if hasattr(self, 'combo_line_spacing') else "1.20"
+        try:
+            line_spacing = float(line_spacing_raw.split()[0])
+        except Exception:
+            line_spacing = 1.2
+
+        para_spacing_raw = self.combo_para_spacing.get() if hasattr(self, 'combo_para_spacing') else "5.0 pt"
+        try:
+            space_after_pt = float(para_spacing_raw.replace("pt", "").strip())
+        except Exception:
+            space_after_pt = 5.0
 
         def on_tier_applied(opt: VolumeSplitOption):
             self.seg_split.set("Smart Balanced Volumes")
@@ -742,6 +864,8 @@ class ModernNovelApp(ctk.CTk):
             top_margin_cm=top_m,
             bottom_margin_cm=bot_m,
             body_font_size=body_size,
+            line_spacing=line_spacing,
+            space_after_pt=space_after_pt,
             all_chapters=all_chapters,
             on_range_changed=on_range_sync
         )
@@ -789,14 +913,31 @@ class ModernNovelApp(ctk.CTk):
 
         # Margins & Binding
         try:
-            inside_m = float(self.entry_margin_inside.get() or 2.0)
-            outside_m = float(self.entry_margin_outside.get() or 1.2)
-            top_m = float(self.entry_margin_top.get() or 1.2)
+            inside_m = float(self.entry_margin_inside.get() or 1.2)
+            outside_m = float(self.entry_margin_outside.get() or 0.6)
+            top_m = float(self.entry_margin_top.get() or 0.6)
             bot_m = float(self.entry_margin_bottom.get() or 1.2)
-            foot_dist = float(self.entry_footer_dist.get() or 0.7)
+            foot_dist = float(self.entry_footer_dist.get() or 0.6)
         except ValueError:
-            messagebox.showerror("Margin Error", "Margin values must be valid numbers (e.g. 2.0, 1.2, 0.7)")
+            messagebox.showerror("Margin Error", "Margin values must be valid numbers (e.g. 1.2, 0.6, 1.2)")
             return
+
+        # Line Spacing and Paragraph Spacing
+        line_spacing_raw = self.combo_line_spacing.get() if hasattr(self, 'combo_line_spacing') else "1.20"
+        try:
+            line_spacing = float(line_spacing_raw.split()[0])
+        except Exception:
+            line_spacing = 1.2
+
+        para_spacing_raw = self.combo_para_spacing.get() if hasattr(self, 'combo_para_spacing') else "5.0 pt"
+        try:
+            space_after_pt = float(para_spacing_raw.replace("pt", "").strip())
+        except Exception:
+            space_after_pt = 5.0
+
+        # Layer 2 Hard Physical Safety Clamp: Protect against hardware feed margins and footer collision
+        foot_dist = max(0.6, float(foot_dist))
+        bot_m = max(1.2, round(foot_dist + 0.5, 1), float(bot_m))
 
         mirror_m = self.var_mirror_margins.get()
 
@@ -805,7 +946,7 @@ class ModernNovelApp(ctk.CTk):
         subtitle = sanitize_xml_string(self.entry_book_subtitle.get().strip())
         imprint = sanitize_xml_string(self.entry_book_imprint.get().strip())
         font_name = self.combo_font.get() or "Georgia"
-        body_size = int(self.entry_body_size.get() or 14)
+        body_size = int(self.entry_body_size.get() or 12)
         ch_size = int(self.combo_ch_size.get() or 28)
         align_mode = "left" if self.combo_align.get() == "Left" else "justify"
         smart_page = self.var_smart_page.get()
@@ -839,13 +980,18 @@ class ModernNovelApp(ctk.CTk):
                 if split_mode == "split":
                     p_h = max(15.0, 29.7 - (top_m + bot_m))
                     p_w = max(10.0, 21.0 - (inside_m + outside_m))
-                    l_per_p = calculate_lines_per_page(p_h, body_size)
+                    l_per_p = calculate_lines_per_page(p_h, body_size, line_spacing=line_spacing, space_after_pt=space_after_pt)
                     c_per_l = calculate_chars_per_line(p_w, body_size)
                     volumes = split_chapters_into_volumes(
                         chapters,
                         target_pages_per_volume=target_pages,
                         lines_per_page=l_per_p,
-                        chars_per_line=c_per_l
+                        chars_per_line=c_per_l,
+                        bottom_margin_cm=bot_m,
+                        top_margin_cm=top_m,
+                        body_font_size=body_size,
+                        line_spacing=line_spacing,
+                        space_after_pt=space_after_pt
                     )
                 else:
                     min_ch = chapters[0][0]
@@ -908,6 +1054,8 @@ class ModernNovelApp(ctk.CTk):
                         bottom_margin_cm=bot_m,
                         footer_distance_cm=foot_dist,
                         mirror_margins=mirror_m,
+                        line_spacing=line_spacing,
+                        space_after_pt=space_after_pt,
                         on_progress=prog_cb
                     )
 
@@ -921,6 +1069,19 @@ class ModernNovelApp(ctk.CTk):
                         if pdf_ok:
                             created_files.append(pdf_path)
                             self.log_message(f"Saved PDF: {os.path.basename(pdf_path)}", "success")
+
+                            # Automated Print Safety Audit on Generated PDF
+                            audit = audit_pdf_print_safety(pdf_path)
+                            if audit.get("is_safe"):
+                                self.log_message(
+                                    f"Print Safety Audit Volume {v_num}: PASSED (Min bottom: {audit.get('min_dist_bottom_cm')}cm >= 0.5cm limit, Footer gap: {audit.get('min_footer_gap_pt')}pt)",
+                                    "success"
+                                )
+                            else:
+                                self.log_message(
+                                    f"Print Safety Audit Volume {v_num}: Warning - {len(audit.get('clipped_pages', []))} page(s) flagged",
+                                    "warning"
+                                )
                         else:
                             self.log_message(f"Failed to render PDF for {docx_filename}", "warning")
 
@@ -1053,19 +1214,21 @@ class ModernNovelApp(ctk.CTk):
             "book_subtitle": self.entry_book_subtitle.get().strip() if hasattr(self, 'entry_book_subtitle') else "",
             "book_imprint": self.entry_book_imprint.get().strip() if hasattr(self, 'entry_book_imprint') else "",
             "reading_font": self.combo_font.get() if hasattr(self, 'combo_font') else "Georgia",
-            "body_font_size": int(self.entry_body_size.get() or 14) if hasattr(self, 'entry_body_size') else 14,
+            "body_font_size": int(self.entry_body_size.get() or 12) if hasattr(self, 'entry_body_size') else 12,
             "chapter_font_size": int(self.combo_ch_size.get() or 28) if hasattr(self, 'combo_ch_size') else 28,
             "align_mode": self.combo_align.get() if hasattr(self, 'combo_align') else "Justify",
             "smart_pagination": self.var_smart_page.get() if hasattr(self, 'var_smart_page') else True,
+            "line_spacing": self.combo_line_spacing.get() if hasattr(self, 'combo_line_spacing') else "1.20",
+            "para_spacing": self.combo_para_spacing.get() if hasattr(self, 'combo_para_spacing') else "5.0 pt",
             "split_mode": self.var_split_mode.get() if hasattr(self, 'var_split_mode') else "split",
             "target_pages": int(self.entry_target_pages.get() or 250) if hasattr(self, 'entry_target_pages') else 250,
             "export_format": self.combo_format.get() if hasattr(self, 'combo_format') else "Both DOCX and PDF",
             # Margins & Binding
-            "inside_margin_cm": float(self.entry_margin_inside.get() or 2.0) if hasattr(self, 'entry_margin_inside') else 2.0,
-            "outside_margin_cm": float(self.entry_margin_outside.get() or 1.2) if hasattr(self, 'entry_margin_outside') else 1.2,
-            "top_margin_cm": float(self.entry_margin_top.get() or 1.2) if hasattr(self, 'entry_margin_top') else 1.2,
+            "inside_margin_cm": float(self.entry_margin_inside.get() or 1.2) if hasattr(self, 'entry_margin_inside') else 1.2,
+            "outside_margin_cm": float(self.entry_margin_outside.get() or 0.6) if hasattr(self, 'entry_margin_outside') else 0.6,
+            "top_margin_cm": float(self.entry_margin_top.get() or 0.6) if hasattr(self, 'entry_margin_top') else 0.6,
             "bottom_margin_cm": float(self.entry_margin_bottom.get() or 1.2) if hasattr(self, 'entry_margin_bottom') else 1.2,
-            "footer_distance_cm": float(self.entry_footer_dist.get() or 0.7) if hasattr(self, 'entry_footer_dist') else 0.7,
+            "footer_distance_cm": float(self.entry_footer_dist.get() or 0.6) if hasattr(self, 'entry_footer_dist') else 0.6,
             "mirror_margins": self.var_mirror_margins.get() if hasattr(self, 'var_mirror_margins') else True,
             "theme_mode": getattr(self, "theme_mode", "Dark")
         }
@@ -1139,6 +1302,10 @@ class ModernNovelApp(ctk.CTk):
             self.combo_align.set(cfg["align_mode"])
         if hasattr(self, 'var_smart_page') and "smart_pagination" in cfg:
             self.var_smart_page.set(cfg["smart_pagination"])
+        if hasattr(self, 'combo_line_spacing') and "line_spacing" in cfg:
+            self.combo_line_spacing.set(str(cfg["line_spacing"]))
+        if hasattr(self, 'combo_para_spacing') and "para_spacing" in cfg:
+            self.combo_para_spacing.set(str(cfg["para_spacing"]))
         if hasattr(self, 'entry_target_pages') and "target_pages" in cfg:
             self.entry_target_pages.delete(0, "end")
             self.entry_target_pages.insert(0, str(cfg["target_pages"]))

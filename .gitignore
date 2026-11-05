@@ -41,6 +41,7 @@ node_modules/
 # Local User Session & Active Profiles
 last_session.json
 *.session.json
+scratch/
 
 # Fetched Novels & Batch Data Folders
 Invincible_Mumu_Novel/

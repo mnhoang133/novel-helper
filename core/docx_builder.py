@@ -38,51 +38,63 @@ def export_single_document(
     author: str = "Web Novel Author",
     imprint_note: str = "Print Edition • 2026",
     font_name: str = "Georgia",
-    body_font_size: int = 14,
+    body_font_size: int = 12,
     chapter_font_size: int = 28,
     text_alignment: str = "justify",
     smart_pagination: bool = True,
+    line_spacing: float = 1.2,
+    space_after_pt: float = 5.0,
     # Customizable Margins (Physical Book Printing Standard)
-    inside_margin_cm: float = 2.0,      # Gáy sách / Binding Gutter
-    outside_margin_cm: float = 1.2,     # Mép ngoài / Outer Margin
+    inside_margin_cm: float = 2.0,      # Gay sach / Binding Gutter
+    outside_margin_cm: float = 1.2,     # Mep ngoai / Outer Margin
     top_margin_cm: float = 1.2,
     bottom_margin_cm: float = 1.2,
-    footer_distance_cm: float = 0.7,
+    footer_distance_cm: float = 0.6,
     header_distance_cm: float = 0.7,
-    mirror_margins: bool = True,        # Lề đối xứng trang chẵn/lẻ
+    mirror_margins: bool = True,        # Le doi xung trang chan/le
     on_progress: Optional[Callable[[int, int, str], None]] = None
 ) -> str:
     """
     Creates a professionally formatted physical-book Word document (.docx).
 
     Features:
-    - Customizable page margins with validation limits.
+    - Customizable page margins with two-layer physical safety clamp:
+      * Footer distance locked >= 0.6 cm (exceeds 0.5cm printer hardware roller limit).
+      * Bottom margin locked >= 1.2 cm AND >= footer_distance + 0.5 cm (guarantees zero collision).
     - True Mirror Margins (<w:mirrorMargins/>) for 2-sided book printing:
-      Odd pages get 2.0cm on the left (inside); Even pages get 2.0cm on the right (inside)!
+      Odd pages get inside margin on left; Even pages get inside margin on right!
     - Redesigned Smart Pagination:
       If vertical space remains on the page to fit Chapter Heading + Ornament + AT LEAST 3 LINES,
       the chapter is allowed to start immediately without wasting page whitespace!
       Applies keep_with_next on heading and first paragraph so headings are never orphaned.
     - Clean cover page with title, subtitle, author, imprint, chapter range.
     - Automatic Table of Contents.
-    - True book page numbering: Bottom right.
+    - True book page numbering: Bottom right on odd pages, bottom left on even pages.
     """
     total = len(chapters)
     if total == 0:
         raise ValueError("No chapters to export!")
 
-    # Bounds validation (allows down to 0.2cm for narrow custom margins)
+    # Parse and clean font name if descriptive suffix is present (e.g. "Georgia - To, ro rang...")
+    clean_font_name = font_name.split(" - ")[0].strip() if font_name else "Georgia"
+
+    # Bounds validation (allows down to 0.2cm for narrow custom margins on top/inside/outside)
     inside_margin_cm = max(0.2, min(5.0, float(inside_margin_cm)))
     outside_margin_cm = max(0.2, min(4.0, float(outside_margin_cm)))
     top_margin_cm = max(0.2, min(3.5, float(top_margin_cm)))
-    bottom_margin_cm = max(0.2, min(3.5, float(bottom_margin_cm)))
-    footer_distance_cm = max(0.2, min(2.5, float(footer_distance_cm)))
     header_distance_cm = max(0.2, min(2.5, float(header_distance_cm)))
+
+    # LAYER 2 PHYSICAL SAFETY CLAMP:
+    # 1. Footer distance must be >= 0.6 cm so page numbers are NEVER clipped by printer hardware (laser limit 0.5cm)
+    effective_footer_cm = max(0.6, min(2.5, float(footer_distance_cm)))
+    # 2. Bottom margin must be >= 1.2 cm AND >= (effective_footer_cm + 0.5 cm) so body text never collides with footer
+    min_safe_bottom = max(1.2, effective_footer_cm + 0.5)
+    effective_bottom_cm = max(min_safe_bottom, min(4.0, float(bottom_margin_cm)))
 
     # Mirror Margins & Binding Geometry:
     # When mirror_margins is active:
-    # Odd pages: Left (Spine/Gáy) = 1.2cm, Right (Outer/Mép) = outside_margin_cm
-    # Even pages: Left (Outer/Mép) = inside_margin_cm (or outside_margin_cm), Right (Spine/Gáy) = 1.2cm
+    # Odd pages: Left (Spine/Gay) = effective_inside_cm, Right (Outer/Mep) = outside_margin_cm
+    # Even pages: Left (Outer/Mep) = inside_margin_cm, Right (Spine/Gay) = effective_inside_cm
     # In Word OpenXML with <w:mirrorMargins/>, left_margin is the Inside/Spine margin, right_margin is Outside.
     if mirror_margins:
         effective_inside_cm = max(1.2, inside_margin_cm)
@@ -91,10 +103,15 @@ def export_single_document(
         effective_inside_cm = inside_margin_cm
         effective_outside_cm = outside_margin_cm
 
-    # Dynamic line and character capacity based on actual margins & font size
-    printable_height_cm = max(15.0, 29.7 - (top_margin_cm + bottom_margin_cm))
+    # Dynamic line and character capacity based on actual margins, font size & spacing
+    printable_height_cm = max(15.0, 29.7 - (top_margin_cm + effective_bottom_cm))
     printable_width_cm = max(10.0, 21.0 - (effective_inside_cm + effective_outside_cm))
-    lines_per_page = calculate_lines_per_page(printable_height_cm, body_font_size)
+    lines_per_page = calculate_lines_per_page(
+        printable_height_cm,
+        body_font_size=body_font_size,
+        line_spacing=line_spacing,
+        space_after_pt=space_after_pt
+    )
     chars_per_line = calculate_chars_per_line(printable_width_cm, body_font_size)
 
     # Sanitize metadata
@@ -112,8 +129,8 @@ def export_single_document(
     sec.left_margin = Cm(effective_inside_cm)     # Inside margin (Gay sach)
     sec.right_margin = Cm(effective_outside_cm)   # Outside margin (Mep ngoai)
     sec.top_margin = Cm(top_margin_cm)
-    sec.bottom_margin = Cm(bottom_margin_cm)
-    sec.footer_distance = Cm(footer_distance_cm)
+    sec.bottom_margin = Cm(effective_bottom_cm)   # Clamped safe bottom margin
+    sec.footer_distance = Cm(effective_footer_cm) # Clamped safe footer distance
     sec.header_distance = Cm(header_distance_cm)
     sec.different_first_page_header_footer = True
 
@@ -131,7 +148,7 @@ def export_single_document(
     p_footer = footer.paragraphs[0]
     p_footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     r_num = p_footer.add_run()
-    r_num.font.name = font_name
+    r_num.font.name = clean_font_name
     r_num.font.size = Pt(10)
     r_num.font.color.rgb = RGBColor(0x33, 0x41, 0x55)
     add_xml_field(r_num, "PAGE")
@@ -142,7 +159,7 @@ def export_single_document(
         p_footer_even = footer_even.paragraphs[0]
         p_footer_even.alignment = WD_ALIGN_PARAGRAPH.LEFT
         r_num_even = p_footer_even.add_run()
-        r_num_even.font.name = font_name
+        r_num_even.font.name = clean_font_name
         r_num_even.font.size = Pt(10)
         r_num_even.font.color.rgb = RGBColor(0x33, 0x41, 0x55)
         add_xml_field(r_num_even, "PAGE")
@@ -161,7 +178,7 @@ def export_single_document(
     p_title = doc.add_paragraph()
     p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r_title = p_title.add_run(novel_title.upper())
-    r_title.font.name = font_name
+    r_title.font.name = clean_font_name
     r_title.font.size = Pt(30)
     r_title.font.bold = True
     r_title.font.color.rgb = RGBColor(0x0F, 0x17, 0x2A)
@@ -172,7 +189,7 @@ def export_single_document(
         p_sub = doc.add_paragraph()
         p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r_sub = p_sub.add_run(subtitle)
-        r_sub.font.name = font_name
+        r_sub.font.name = clean_font_name
         r_sub.font.size = Pt(14)
         r_sub.font.italic = True
         r_sub.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
@@ -183,7 +200,7 @@ def export_single_document(
         p_author = doc.add_paragraph()
         p_author.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r_auth = p_author.add_run(f"by {author}")
-        r_auth.font.name = font_name
+        r_auth.font.name = clean_font_name
         r_auth.font.size = Pt(13)
         r_auth.font.color.rgb = RGBColor(0x33, 0x41, 0x55)
         p_author.paragraph_format.space_after = Pt(120)
@@ -195,7 +212,7 @@ def export_single_document(
     p_meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
     meta_text = sanitize_xml_string(f"Chapters {min_ch} to {max_ch} • {total} Chapters Total\n{imprint_note}")
     r_meta = p_meta.add_run(meta_text)
-    r_meta.font.name = font_name
+    r_meta.font.name = clean_font_name
     r_meta.font.size = Pt(10)
     r_meta.font.color.rgb = RGBColor(0x64, 0x74, 0x8B)
 
@@ -217,7 +234,7 @@ def export_single_document(
     if s_toc1 is not None:
         try:
             s_toc1.element.set(qn('w:styleId'), 'TOC1')
-            s_toc1.font.name = font_name
+            s_toc1.font.name = clean_font_name
             s_toc1.font.size = Pt(10)
             s_toc1.paragraph_format.space_before = Pt(0)
             s_toc1.paragraph_format.space_after = Pt(1.0)
@@ -230,7 +247,7 @@ def export_single_document(
     p_toc_heading.paragraph_format.space_before = Pt(8)
     p_toc_heading.paragraph_format.space_after = Pt(6)
     r_toc_h = p_toc_heading.add_run("TABLE OF CONTENTS")
-    r_toc_h.font.name = font_name
+    r_toc_h.font.name = clean_font_name
     r_toc_h.font.size = Pt(18)
     r_toc_h.font.bold = True
     r_toc_h.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
@@ -270,7 +287,7 @@ def export_single_document(
                     p_sep.paragraph_format.space_after = Pt(16)
                     p_sep.paragraph_format.keep_with_next = True
                     r_sep = p_sep.add_run("*   *   *")
-                    r_sep.font.name = font_name
+                    r_sep.font.name = clean_font_name
                     r_sep.font.size = Pt(11)
                     r_sep.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
                     lines_on_current_page += 2.0
@@ -280,7 +297,7 @@ def export_single_document(
                     doc.add_page_break()
                     lines_on_current_page = 0.0
 
-        # Chapter Header (Prominent, 26-30pt)
+        # Chapter Header (Prominent, 24-30pt)
         h = doc.add_heading(level=1)
         h.alignment = WD_ALIGN_PARAGRAPH.CENTER
         # Ensure Chapter 1 starts on a fresh page after TOC without inserting an empty paragraph
@@ -291,7 +308,7 @@ def export_single_document(
         h.paragraph_format.keep_with_next = True  # NEVER separate heading from content
 
         r_ch_title = h.add_run(sanitize_xml_string(f"CHAPTER {ch_num}"))
-        r_ch_title.font.name = font_name
+        r_ch_title.font.name = clean_font_name
         r_ch_title.font.size = Pt(chapter_font_size)
         r_ch_title.font.bold = True
         r_ch_title.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
@@ -302,7 +319,7 @@ def export_single_document(
         p_div.paragraph_format.space_after = Pt(14)
         p_div.paragraph_format.keep_with_next = True  # Keep ornament with text
         r_div = p_div.add_run("~ * ~")
-        r_div.font.name = font_name
+        r_div.font.name = clean_font_name
         r_div.font.size = Pt(11)
         r_div.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
 
@@ -321,20 +338,20 @@ def export_single_document(
             else:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-            p.paragraph_format.line_spacing = 1.3
-            p.paragraph_format.space_after = Pt(7)
+            p.paragraph_format.line_spacing = float(line_spacing)
+            p.paragraph_format.space_after = Pt(float(space_after_pt))
 
             # Keep the first paragraph with the heading so Word will never break between them
             if p_idx == 0:
                 p.paragraph_format.keep_with_next = True
 
             r_p = p.add_run(line)
-            r_p.font.name = font_name
+            r_p.font.name = clean_font_name
             r_p.font.size = Pt(body_font_size)
             r_p.font.color.rgb = RGBColor(0x11, 0x18, 0x27)
 
-            # Dynamic line counting for this paragraph based on printable width
-            p_lines = max(1, math.ceil(len(line) / chars_per_line)) + 0.3
+            # Dynamic line counting for this paragraph based on printable width & spacing
+            p_lines = max(1, math.ceil(len(line) / chars_per_line)) + (space_after_pt / (body_font_size * line_spacing))
             lines_on_current_page += p_lines
             if lines_on_current_page >= lines_per_page:
                 lines_on_current_page = lines_on_current_page % lines_per_page

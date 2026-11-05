@@ -41,6 +41,11 @@ from core.diagnostics import (
     generate_export_diagnostics
 )
 
+from core.print_reviewer import (
+    audit_pdf_print_safety,
+    generate_print_preview_image
+)
+
 __all__ = [
     "LINES_PER_PAGE_STANDARD",
     "CHARS_PER_LINE_STANDARD",
@@ -59,5 +64,7 @@ __all__ = [
     "export_single_document",
     "add_xml_field",
     "convert_docx_to_pdf",
-    "generate_export_diagnostics"
+    "generate_export_diagnostics",
+    "audit_pdf_print_safety",
+    "generate_print_preview_image"
 ]

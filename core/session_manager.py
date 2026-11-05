@@ -38,23 +38,25 @@ DEFAULT_CONFIG = {
     "book_author": "Web Novel Author",
     "book_subtitle": "Official English Translation",
     "book_imprint": "Print Edition • 2026",
-    "reading_font": "Georgia",
-    "body_font_size": 14,
+    "reading_font": "Georgia - To, ro rang, de doc",
+    "body_font_size": 12,
     "chapter_font_size": 28,
     "align_mode": "Justify",
     "smart_pagination": True,
+    "line_spacing": "1.20",
+    "para_spacing": "5.0 pt",
     "split_mode": "split",
-    "target_pages": 310,
+    "target_pages": 250,
     "export_format": "Both DOCX and PDF",
     # Page Margins & Book Binding
-    "inside_margin_cm": 2.0,      # Gáy sách / Inside
-    "outside_margin_cm": 1.2,     # Mép ngoài / Outside
-    "top_margin_cm": 1.2,
+    "inside_margin_cm": 1.2,      # Gay sach / Inside
+    "outside_margin_cm": 0.6,     # Mep ngoai / Outside
+    "top_margin_cm": 0.6,
     "bottom_margin_cm": 1.2,
-    "footer_distance_cm": 0.7,
-    "header_distance_cm": 0.7,
-    "mirror_margins": True,       # Lề đối xứng trang chẵn / lẻ
-    "theme_mode": "Dark"          # Giao diện Dark / Light theo sở thích người dùng
+    "footer_distance_cm": 0.6,
+    "header_distance_cm": 0.6,
+    "mirror_margins": True,       # Le doi xung trang chan / le
+    "theme_mode": "Dark"          # Giao dien Dark / Light theo so thich nguoi dung
 }
 
 

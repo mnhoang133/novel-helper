@@ -25,7 +25,9 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         outside_margin_cm: float = 1.2,
         top_margin_cm: float = 1.2,
         bottom_margin_cm: float = 1.2,
-        body_font_size: int = 14,
+        body_font_size: int = 12,
+        line_spacing: float = 1.2,
+        space_after_pt: float = 5.0,
         all_chapters: Optional[List[Tuple[int, str, str]]] = None,
         on_range_changed: Optional[Callable[[int, int], None]] = None
     ):
@@ -45,6 +47,8 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
         self.top_margin_cm = float(top_margin_cm)
         self.bottom_margin_cm = float(bottom_margin_cm)
         self.body_font_size = int(body_font_size)
+        self.line_spacing = float(line_spacing)
+        self.space_after_pt = float(space_after_pt)
 
         # Background matches parent theme
         self.configure(fg_color=("#eceff4", "#0b0f19"))
@@ -200,7 +204,9 @@ class SmartVolumeAnalyzerDialog(ctk.CTkToplevel):
             outside_margin_cm=self.outside_margin_cm,
             top_margin_cm=self.top_margin_cm,
             bottom_margin_cm=self.bottom_margin_cm,
-            body_font_size=self.body_font_size
+            body_font_size=self.body_font_size,
+            line_spacing=self.line_spacing,
+            space_after_pt=self.space_after_pt
         )
 
         for tier_key, opt in analysis.items():

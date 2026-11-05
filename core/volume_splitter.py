@@ -99,23 +99,33 @@ def analyze_optimal_volume_splits(
     outside_margin_cm: float = 1.2,
     top_margin_cm: float = 1.2,
     bottom_margin_cm: float = 1.2,
-    body_font_size: int = 14
+    body_font_size: int = 12,
+    line_spacing: float = 1.2,
+    space_after_pt: float = 5.0
 ) -> Dict[str, VolumeSplitOption]:
     """
     Analyzes all chapters and calculates balanced volume partitions for:
-    1. Special Tier: Khít Mục lục & Đều chương (Full TOC 1-2 trang, bất kể số trang)
-    2. Tier 1: Tập mỏng (50 - 100 trang)
-    3. Tier 2: Tập chuẩn (100 - 200 trang)
-    4. Tier 3: Tập vừa (200 - 300 trang)
-    5. Tier 4: Tập dày (300 - 400 trang)
+    1. Special Tier: Khit Muc luc & Deu chuong (Full TOC 1-2 trang, bat ke so trang)
+    2. Tier 1: Tap mong (50 - 100 trang)
+    3. Tier 2: Tap chuan (100 - 200 trang)
+    4. Tier 3: Tap vua (200 - 300 trang)
+    5. Tier 4: Tap day (300 - 400 trang)
     """
     if not chapters:
         return {}
 
+    # Enforce layer-2 safety minimum for bottom margin (min 1.2cm)
+    safe_bottom_cm = max(1.2, float(bottom_margin_cm))
+
     # Dynamic page dimensions based on user inputs
-    printable_height_cm = max(15.0, 29.7 - (top_margin_cm + bottom_margin_cm))
+    printable_height_cm = max(15.0, 29.7 - (top_margin_cm + safe_bottom_cm))
     printable_width_cm = max(10.0, 21.0 - (inside_margin_cm + outside_margin_cm))
-    lines_per_page = calculate_lines_per_page(printable_height_cm, body_font_size)
+    lines_per_page = calculate_lines_per_page(
+        printable_height_cm,
+        body_font_size=body_font_size,
+        line_spacing=line_spacing,
+        space_after_pt=space_after_pt
+    )
     chars_per_line = calculate_chars_per_line(printable_width_cm, body_font_size)
     toc_entries_per_page = calculate_toc_entries_per_page(printable_height_cm)
 
@@ -124,7 +134,7 @@ def analyze_optimal_volume_splits(
     total_body_lines = 0.0
 
     for ch_num, title, body in chapters:
-        lines = calculate_chapter_real_lines(body, chars_per_line=chars_per_line)
+        lines = calculate_chapter_real_lines(body, chars_per_line=chars_per_line, space_after_pt=space_after_pt)
         chapter_metrics.append((ch_num, lines))
         total_body_lines += lines
 
